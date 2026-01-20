@@ -11,8 +11,17 @@
     "get-shit-done",
     "agents",
     "hooks/dist",
-    "scripts"
+    "scripts",
+    "src",
+    "dist"
   ],
+  "scripts": {
+    "build": "tsc",
+    "build:hooks": "node scripts/build-hooks.js",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build:hooks"
+  },
   "keywords": [
     "claude",
     "claude-code",
@@ -36,10 +45,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "esbuild": "^0.24.0"
-  },
-  "scripts": {
-    "build:hooks": "node scripts/build-hooks.js",
-    "prepublishOnly": "npm run build:hooks"
+    "esbuild": "^0.24.0",
+    "typescript": "^5.3.0",
+    "@types/node": "^16.18.0"
   }
 }
