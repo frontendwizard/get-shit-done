@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 ## Current Position
 
 Phase: 1 of 6 (Platform Abstraction Foundation)
-Plan: 4 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In progress
-Last activity: 2026-01-20 — Completed 01-04-PLAN.md (TypeScript Build Infrastructure)
+Last activity: 2026-01-20 — Completed 01-03-PLAN.md (Install Path Abstraction)
 
-Progress: [████░░░░░░] 80% (4/5 plans in Phase 1)
+Progress: [███░░░░░░░] 60% (3/5 plans in Phase 1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 1.25 min
+- Total plans completed: 3
+- Average duration: 1.57 min
 - Total execution time: 0.08 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 | 4 | 5 min | 1.25 min |
+| 1 | 3 | 4.7 min | 1.57 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (1 min), 01-02 (2 min), 01-03 (1 min), 01-04 (1 min)
-- Trend: Consistent velocity (1-2 min per plan)
+- Last 5 plans: 01-01 (1 min), 01-02 (2 min), 01-03 (2.7 min)
+- Trend: Consistent velocity (1-3 min per plan)
 
 *Updated after each plan completion*
 
@@ -58,10 +58,9 @@ Recent decisions affecting current work:
 - Registry pattern: Factory + Singleton for cached platform-specific instances
 - 10 binding behavioral requirements documented for platform adapter implementations
 
-**From 01-04 execution:**
-- PLAT-07: TypeScript compiles to dist/ directory with CommonJS modules for Node.js 16.7.0+ compatibility
-- PLAT-08: TypeScript is devDependency only - compiled JS shipped, maintains zero runtime dependencies
-- PLAT-09: Source maps and declaration files generated for debugging and TypeScript consumers
+**From 01-03 execution:**
+- PLAT-10: Install adapter separates local vs global installation paths (local bypasses platform detection for speed)
+- PLAT-11: PathResolver.getCommandsDir() returns full path including /gsd subdirectory for Claude Code
 
 ### Pending Todos
 
@@ -81,7 +80,7 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-20 (plan execution)
-Stopped at: Completed 01-04-PLAN.md (TypeScript Build Infrastructure)
+Stopped at: Completed 01-03-PLAN.md (Install Path Abstraction)
 Resume file: None
 
-Next action: Execute 01-05-PLAN.md (next plan in Phase 1)
+Next action: Execute 01-04-PLAN.md (next plan in Phase 1)
