@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const readline = require('readline');
+const { getInstallPaths } = require('../dist/platform/install-adapter');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -266,22 +267,15 @@ function verifyFileInstalled(filePath, description) {
  */
 function install(isGlobal) {
   const src = path.join(__dirname, '..');
-  // Priority: explicit --config-dir arg > CLAUDE_CONFIG_DIR env var > default ~/.claude
-  const configDir = expandTilde(explicitConfigDir) || expandTilde(process.env.CLAUDE_CONFIG_DIR);
-  const defaultGlobalDir = configDir || path.join(os.homedir(), '.claude');
-  const claudeDir = isGlobal
-    ? defaultGlobalDir
-    : path.join(process.cwd(), '.claude');
+
+  // Get platform-aware installation paths
+  const paths = getInstallPaths(isGlobal, explicitConfigDir);
+  const { configDir, commandsDir, agentsDir, hooksDir, pathPrefix } = paths;
+  const claudeDir = configDir;  // Alias for backward compatibility with existing code
 
   const locationLabel = isGlobal
     ? claudeDir.replace(os.homedir(), '~')
     : claudeDir.replace(process.cwd(), '.');
-
-  // Path prefix for file references
-  // Use actual path when CLAUDE_CONFIG_DIR is set, otherwise use ~ shorthand
-  const pathPrefix = isGlobal
-    ? (configDir ? `${claudeDir}/` : '~/.claude/')
-    : './.claude/';
 
   console.log(`  Installing to ${cyan}${locationLabel}${reset}\n`);
 
@@ -291,15 +285,11 @@ function install(isGlobal) {
   // Clean up orphaned files from previous versions
   cleanupOrphanedFiles(claudeDir);
 
-  // Create commands directory
-  const commandsDir = path.join(claudeDir, 'commands');
+  // Create commands directory and copy commands/gsd with path replacement
   fs.mkdirSync(commandsDir, { recursive: true });
-
-  // Copy commands/gsd with path replacement
   const gsdSrc = path.join(src, 'commands', 'gsd');
-  const gsdDest = path.join(commandsDir, 'gsd');
-  copyWithPathReplacement(gsdSrc, gsdDest, pathPrefix);
-  if (verifyInstalled(gsdDest, 'commands/gsd')) {
+  copyWithPathReplacement(gsdSrc, commandsDir, pathPrefix);
+  if (verifyInstalled(commandsDir, 'commands/gsd')) {
     console.log(`  ${green}✓${reset} Installed commands/gsd`);
   } else {
     failures.push('commands/gsd');
@@ -315,18 +305,17 @@ function install(isGlobal) {
     failures.push('get-shit-done');
   }
 
-  // Copy agents to ~/.claude/agents (subagents must be at root level)
+  // Copy agents to agents directory (subagents must be at root level)
   // Only delete gsd-*.md files to preserve user's custom agents
   const agentsSrc = path.join(src, 'agents');
   if (fs.existsSync(agentsSrc)) {
-    const agentsDest = path.join(claudeDir, 'agents');
-    fs.mkdirSync(agentsDest, { recursive: true });
+    fs.mkdirSync(agentsDir, { recursive: true });
 
     // Remove old GSD agents (gsd-*.md) before copying new ones
-    if (fs.existsSync(agentsDest)) {
-      for (const file of fs.readdirSync(agentsDest)) {
+    if (fs.existsSync(agentsDir)) {
+      for (const file of fs.readdirSync(agentsDir)) {
         if (file.startsWith('gsd-') && file.endsWith('.md')) {
-          fs.unlinkSync(path.join(agentsDest, file));
+          fs.unlinkSync(path.join(agentsDir, file));
         }
       }
     }
@@ -337,10 +326,10 @@ function install(isGlobal) {
       if (entry.isFile() && entry.name.endsWith('.md')) {
         let content = fs.readFileSync(path.join(agentsSrc, entry.name), 'utf8');
         content = content.replace(/~\/\.claude\//g, pathPrefix);
-        fs.writeFileSync(path.join(agentsDest, entry.name), content);
+        fs.writeFileSync(path.join(agentsDir, entry.name), content);
       }
     }
-    if (verifyInstalled(agentsDest, 'agents')) {
+    if (verifyInstalled(agentsDir, 'agents')) {
       console.log(`  ${green}✓${reset} Installed agents`);
     } else {
       failures.push('agents');
@@ -371,19 +360,18 @@ function install(isGlobal) {
   // Copy hooks from dist/ (bundled with dependencies)
   const hooksSrc = path.join(src, 'hooks', 'dist');
   if (fs.existsSync(hooksSrc)) {
-    const hooksDest = path.join(claudeDir, 'hooks');
-    fs.mkdirSync(hooksDest, { recursive: true });
+    fs.mkdirSync(hooksDir, { recursive: true });
     const hookEntries = fs.readdirSync(hooksSrc);
     for (const entry of hookEntries) {
       const srcFile = path.join(hooksSrc, entry);
       // Only copy files, not directories
       if (fs.statSync(srcFile).isFile()) {
-        const destFile = path.join(hooksDest, entry);
+        const destFile = path.join(hooksDir, entry);
         fs.copyFileSync(srcFile, destFile);
       }
     }
-    if (verifyInstalled(hooksDest, 'hooks')) {
-      console.log(`  ${green}✓${reset} Installed hooks (bundled)`);
+    if (verifyInstalled(hooksDir, 'hooks')) {
+      console.log(`  ${green}✓${reset} Installed hooks (bundled)`)
     } else {
       failures.push('hooks');
     }
