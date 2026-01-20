@@ -5,6 +5,7 @@ const path = require('path');
 const os = require('os');
 const readline = require('readline');
 const { getInstallPaths } = require('../dist/platform/install-adapter');
+const { ClaudeCodeAdapter } = require('../dist/platform');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -265,13 +266,16 @@ function verifyFileInstalled(filePath, description) {
 /**
  * Install to the specified directory
  */
-function install(isGlobal) {
+async function install(isGlobal) {
   const src = path.join(__dirname, '..');
 
   // Get platform-aware installation paths
   const paths = getInstallPaths(isGlobal, explicitConfigDir);
   const { configDir, commandsDir, agentsDir, hooksDir, pathPrefix } = paths;
   const claudeDir = configDir;  // Alias for backward compatibility with existing code
+
+  // Create adapter for hook registration
+  const adapter = new ClaudeCodeAdapter();
 
   const locationLabel = isGlobal
     ? claudeDir.replace(os.homedir(), '~')
@@ -394,28 +398,13 @@ function install(isGlobal) {
     ? buildHookCommand(claudeDir, 'gsd-check-update.js')
     : 'node .claude/hooks/gsd-check-update.js';
 
-  // Configure SessionStart hook for update checking
-  if (!settings.hooks) {
-    settings.hooks = {};
-  }
-  if (!settings.hooks.SessionStart) {
-    settings.hooks.SessionStart = [];
-  }
-
-  // Check if GSD update hook already exists
-  const hasGsdUpdateHook = settings.hooks.SessionStart.some(entry =>
+  // Register hooks using adapter
+  const hasGsdUpdateHook = settings.hooks?.SessionStart?.some(entry =>
     entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'))
   );
 
   if (!hasGsdUpdateHook) {
-    settings.hooks.SessionStart.push({
-      hooks: [
-        {
-          type: 'command',
-          command: updateCheckCommand
-        }
-      ]
-    });
+    await adapter.registerHook('SessionStart', updateCheckCommand);
     console.log(`  ${green}✓${reset} Configured update check hook`);
   }
 
@@ -501,12 +490,12 @@ function handleStatusline(settings, isInteractive, callback) {
 /**
  * Prompt for install location
  */
-function promptLocation() {
+async function promptLocation() {
   // Check if stdin is a TTY - if not, fall back to global install
   // This handles npx execution in environments like WSL2 where stdin may not be properly connected
   if (!process.stdin.isTTY) {
     console.log(`  ${yellow}Non-interactive terminal detected, defaulting to global install${reset}\n`);
-    const { settingsPath, settings, statuslineCommand } = install(true);
+    const { settingsPath, settings, statuslineCommand } = await install(true);
     handleStatusline(settings, false, (shouldInstallStatusline) => {
       finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
     });
@@ -522,11 +511,11 @@ function promptLocation() {
   let answered = false;
 
   // Handle readline close event to detect premature stdin closure
-  rl.on('close', () => {
+  rl.on('close', async () => {
     if (!answered) {
       answered = true;
       console.log(`\n  ${yellow}Input stream closed, defaulting to global install${reset}\n`);
-      const { settingsPath, settings, statuslineCommand } = install(true);
+      const { settingsPath, settings, statuslineCommand } = await install(true);
       handleStatusline(settings, false, (shouldInstallStatusline) => {
         finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
       });
@@ -543,12 +532,12 @@ function promptLocation() {
   ${cyan}2${reset}) Local  ${dim}(./.claude)${reset} - this project only
 `);
 
-  rl.question(`  Choice ${dim}[1]${reset}: `, (answer) => {
+  rl.question(`  Choice ${dim}[1]${reset}: `, async (answer) => {
     answered = true;
     rl.close();
     const choice = answer.trim() || '1';
     const isGlobal = choice !== '2';
-    const { settingsPath, settings, statuslineCommand } = install(isGlobal);
+    const { settingsPath, settings, statuslineCommand } = await install(isGlobal);
     // Interactive mode - prompt for optional features
     handleStatusline(settings, true, (shouldInstallStatusline) => {
       finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
@@ -557,24 +546,26 @@ function promptLocation() {
 }
 
 // Main
-if (hasGlobal && hasLocal) {
-  console.error(`  ${yellow}Cannot specify both --global and --local${reset}`);
-  process.exit(1);
-} else if (explicitConfigDir && hasLocal) {
-  console.error(`  ${yellow}Cannot use --config-dir with --local${reset}`);
-  process.exit(1);
-} else if (hasGlobal) {
-  const { settingsPath, settings, statuslineCommand } = install(true);
-  // Non-interactive - respect flags
-  handleStatusline(settings, false, (shouldInstallStatusline) => {
-    finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
-  });
-} else if (hasLocal) {
-  const { settingsPath, settings, statuslineCommand } = install(false);
-  // Non-interactive - respect flags
-  handleStatusline(settings, false, (shouldInstallStatusline) => {
-    finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
-  });
-} else {
-  promptLocation();
-}
+(async () => {
+  if (hasGlobal && hasLocal) {
+    console.error(`  ${yellow}Cannot specify both --global and --local${reset}`);
+    process.exit(1);
+  } else if (explicitConfigDir && hasLocal) {
+    console.error(`  ${yellow}Cannot use --config-dir with --local${reset}`);
+    process.exit(1);
+  } else if (hasGlobal) {
+    const { settingsPath, settings, statuslineCommand } = await install(true);
+    // Non-interactive - respect flags
+    handleStatusline(settings, false, (shouldInstallStatusline) => {
+      finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
+    });
+  } else if (hasLocal) {
+    const { settingsPath, settings, statuslineCommand } = await install(false);
+    // Non-interactive - respect flags
+    handleStatusline(settings, false, (shouldInstallStatusline) => {
+      finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
+    });
+  } else {
+    await promptLocation();
+  }
+})();

@@ -16,10 +16,10 @@ export { ClaudeCodePaths, OpenCodePaths } from './paths';
 export { detectPlatform } from './detection';
 
 // Adapter registry
-export { getAdapter, registerAdapter, AdapterRegistry } from './registry';
+export { PlatformRegistry } from './registry';
 
 // Install adapter (for install.js integration)
-export { InstallAdapter } from './install-adapter';
+export { getInstallPaths, InstallPaths } from './install-adapter';
 
 // Platform adapters
 export { ClaudeCodeAdapter } from './adapters/claude-code';
