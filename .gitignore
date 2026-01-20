@@ -8,6 +8,14 @@ commands.html
 
 # Local test installs
 .claude/
+.opencode/
 
 # Build artifacts (committed to npm, not git)
 hooks/dist/
+
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
+# TypeScript cache
+.tsbuildinfo
