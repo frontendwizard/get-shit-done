@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-01-19)
 
 **Core value:** Platform independence - users choose AI platforms based on project needs, not tooling limitations
-**Current focus:** Phase 1 - Platform Abstraction Foundation
+**Current focus:** Phase 2 - Claude Code Adapter & Backward Compatibility
 
 ## Current Position
 

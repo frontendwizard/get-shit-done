@@ -118,12 +118,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
+| PLAT-03 | Phase 1 | Complete |
 | PLAT-04 | Phase 2 | Pending |
 | PLAT-05 | Phase 3 | Pending |
-| PLAT-06 | Phase 1 | Pending |
+| PLAT-06 | Phase 1 | Complete |
 | PLAT-07 | Phase 2 | Pending |
 | AGENT-01 | Phase 4 | Pending |
 | AGENT-02 | Phase 4 | Pending |
@@ -139,16 +139,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-07 | Phase 2 | Pending |
 | CMD-01 | Phase 4 | Pending |
 | CMD-02 | Phase 4 | Pending |
-| CMD-03 | Phase 1 | Pending |
+| CMD-03 | Phase 1 | Complete |
 | CMD-04 | Phase 2 | Pending |
 | HOOK-01 | Phase 5 | Pending |
 | HOOK-02 | Phase 5 | Pending |
 | HOOK-03 | Phase 5 | Pending |
 | HOOK-04 | Phase 5 | Pending |
-| PORT-01 | Phase 1 | Pending |
-| PORT-02 | Phase 1 | Pending |
-| PORT-03 | Phase 1 | Pending |
-| PORT-04 | Phase 1 | Pending |
+| PORT-01 | Phase 1 | Complete |
+| PORT-02 | Phase 1 | Complete |
+| PORT-03 | Phase 1 | Complete |
+| PORT-04 | Phase 1 | Complete |
 | COMPAT-01 | Phase 2 | Pending |
 | COMPAT-02 | Phase 2 | Pending |
 | COMPAT-03 | Phase 2 | Pending |
