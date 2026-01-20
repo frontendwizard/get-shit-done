@@ -34,11 +34,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 5 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Platform detection and type definitions
-- [ ] 01-02-PLAN.md — Path resolution abstraction and registry factory
-- [ ] 01-03-PLAN.md — Install script integration with platform abstraction
-- [ ] 01-04-PLAN.md — TypeScript build infrastructure
-- [ ] 01-05-PLAN.md — Verification checkpoint
+- [x] 01-01-PLAN.md — Platform detection and type definitions
+- [x] 01-02-PLAN.md — Path resolution abstraction and registry factory
+- [x] 01-03-PLAN.md — Install script integration with platform abstraction
+- [x] 01-04-PLAN.md — TypeScript build infrastructure
+- [x] 01-05-PLAN.md — Verification checkpoint
 
 ### Phase 2: Claude Code Adapter & Backward Compatibility
 **Goal**: Existing Claude Code installations work identically through new adapter layer with zero regression
@@ -50,10 +50,14 @@ Plans:
   3. Active .planning/ projects continue working without modification after upgrade
   4. Installation handles configuration backup, orphaned file cleanup, and collision detection
   5. Non-interactive mode supports CI/Docker environments
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] TBD during plan-phase
+- [ ] 02-01-PLAN.md — ClaudeCodeAdapter implementation
+- [ ] 02-02-PLAN.md — Refactor install.js to use adapter pattern
+- [ ] 02-03-PLAN.md — Make command files platform-agnostic
+- [ ] 02-04-PLAN.md — Template rendering for {{config_dir}} placeholders
+- [ ] 02-05-PLAN.md — Manual verification checkpoint
 
 ### Phase 3: OpenCode Adapter & Multi-Platform Installation
 **Goal**: Users can install GSD for OpenCode and execute basic workflows on both platforms
@@ -122,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Abstraction Foundation | 5/5 | Complete | 2026-01-20 |
-| 2. Claude Code Adapter & Backward Compatibility | 0/? | Not started | - |
+| 2. Claude Code Adapter & Backward Compatibility | 0/5 | Not started | - |
 | 3. OpenCode Adapter & Multi-Platform Installation | 0/? | Not started | - |
 | 4. Agent Spawning Abstraction | 0/? | Not started | - |
 | 5. Lifecycle Hooks | 0/? | Not started | - |
