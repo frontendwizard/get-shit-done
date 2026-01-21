@@ -16,6 +16,7 @@ import * as path from 'path';
 import { PlatformAdapter, AgentInstance, HookType } from '../adapter';
 import { ClaudeCodePaths } from '../paths';
 import { PlatformType } from '../types';
+import { ClaudeCodeAgentInstance } from './claude-code-agent';
 
 /**
  * Ultra-minimal Claude Code adapter for Phase 2
@@ -161,7 +162,51 @@ export class ClaudeCodeAdapter implements PlatformAdapter {
     throw new Error('unregisterHook() not implemented in Phase 2');
   }
 
-  async spawnAgent(): Promise<AgentInstance> {
-    throw new Error('spawnAgent() not implemented in Phase 2 - deferred to Phase 4');
+  async spawnAgent(agentPath: string, args?: Record<string, string>): Promise<AgentInstance> {
+    // Validate agent file exists
+    if (!fs.existsSync(agentPath)) {
+      throw new Error(`Agent file not found: ${agentPath}`);
+    }
+
+    // Extract agent name from path for Task invocation
+    // Example: /path/to/gsd-project-researcher.md -> gsd-project-researcher
+    const agentName = path.basename(agentPath, '.md');
+
+    // Construct prompt from args (if provided)
+    let prompt = '';
+    if (args && Object.keys(args).length > 0) {
+      prompt = Object.entries(args)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+    }
+
+    // Generate unique agent ID for tracking
+    const agentId = `${agentName}-${Date.now()}`;
+
+    // Determine output path where agent will write results
+    // Agents write to .planning/research/*.md or .planning/phases/*/*.md
+    const outputPath = this.determineOutputPath(agentName, args);
+
+    // Create AgentInstance for tracking
+    // NOTE: Task tool invocation happens in markdown workflow files
+    // This method provides the tracking interface
+    const instance = new ClaudeCodeAgentInstance(agentId, outputPath);
+
+    return instance;
+  }
+
+  /**
+   * Determine output path for agent results
+   *
+   * Default: .planning/research/{agentName}-output.md
+   * Can be overridden by args['output_path'] if provided
+   */
+  private determineOutputPath(agentName: string, args?: Record<string, string>): string {
+    // Default: .planning/research/{agentName}-output.md
+    // Can be overridden by args['output_path'] if provided
+    if (args?.output_path) {
+      return args.output_path;
+    }
+    return path.join(process.cwd(), '.planning', 'research', `${agentName}-output.md`);
   }
 }
