@@ -106,15 +106,31 @@ export class OpenCodeAdapter implements PlatformAdapter {
   }
 
   // =========================================================================
-  // Hook registration - Stubbed for Phase 5
+  // Hook registration - Graceful degradation (silent no-op)
   // =========================================================================
 
+  /**
+   * Register hook - silent no-op for OpenCode
+   *
+   * OpenCode uses a plugin-based architecture rather than command hooks.
+   * Per user decision in 05-CONTEXT.md: "Silent skip when hook not supported -
+   * don't register, don't error, don't log"
+   *
+   * Full OpenCode plugin support is deferred to v2.
+   */
   async registerHook(hookType: HookType, hookPath: string): Promise<void> {
-    throw new Error(`registerHook() not implemented in Phase 3 - deferred to Phase 5 (Lifecycle Hooks)`);
+    // Intentional no-op: graceful degradation for unsupported platform
+    return;
   }
 
+  /**
+   * Unregister hook - silent no-op for OpenCode
+   *
+   * OpenCode doesn't support command hooks, so nothing to unregister.
+   */
   async unregisterHook(hookType: HookType): Promise<void> {
-    throw new Error(`unregisterHook() not implemented in Phase 3 - deferred to Phase 5 (Lifecycle Hooks)`);
+    // Intentional no-op: graceful degradation for unsupported platform
+    return;
   }
 
   // =========================================================================
