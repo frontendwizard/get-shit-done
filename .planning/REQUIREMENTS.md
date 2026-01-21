@@ -19,11 +19,13 @@ Requirements for multi-platform support release. Each maps to roadmap phases.
 
 ### Agent Spawning
 
-- [ ] **AGENT-01**: Abstract Task tool (Claude Code) vs YAML agent syntax (OpenCode)
-- [ ] **AGENT-02**: Parallel agent spawning (4-7 agents simultaneously)
-- [ ] **AGENT-03**: Agent completion verification and status tracking
-- [ ] **AGENT-04**: Agent spawn failure detection with clear error messages
-- [ ] **AGENT-05**: Agent output collection from .planning/ files
+- [x] **AGENT-01**: Abstract Task tool (Claude Code) vs CLI spawning (OpenCode) - TypeScript infrastructure complete
+- [x] **AGENT-02**: Parallel agent spawning (4-7 agents simultaneously) - Promise.allSettled implementation
+- [x] **AGENT-03**: Agent completion verification and status tracking - AgentInstance with waitForCompletion()
+- [x] **AGENT-04**: Agent spawn failure detection with clear error messages - file validation + event listeners
+- [x] **AGENT-05**: Agent output collection from .planning/ files - getOutput() method
+
+*Note: Task() is a Claude Code platform feature. Commands using Task() for multi-agent spawning work on Claude Code. OpenCode support requires platform-level Task() equivalent.*
 
 ### Installation & Setup
 
@@ -37,8 +39,8 @@ Requirements for multi-platform support release. Each maps to roadmap phases.
 
 ### Command Portability
 
-- [ ] **CMD-01**: All 24 slash commands work on both platforms
-- [ ] **CMD-02**: Command arguments passed correctly per platform
+- [-] **CMD-01**: 15 of 24 slash commands work on both platforms (commands requiring Task tool are Claude Code only)
+- [x] **CMD-02**: Command arguments passed correctly per platform
 - [ ] **CMD-03**: Platform-agnostic command definitions (markdown + YAML)
 - [ ] **CMD-04**: Zero command duplication across platforms
 
@@ -125,11 +127,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-05 | Phase 3 | Complete |
 | PLAT-06 | Phase 1 | Complete |
 | PLAT-07 | Phase 2 | Pending |
-| AGENT-01 | Phase 4 | Pending |
-| AGENT-02 | Phase 4 | Pending |
-| AGENT-03 | Phase 4 | Pending |
-| AGENT-04 | Phase 4 | Pending |
-| AGENT-05 | Phase 4 | Pending |
+| AGENT-01 | Phase 4 | Complete |
+| AGENT-02 | Phase 4 | Complete |
+| AGENT-03 | Phase 4 | Complete |
+| AGENT-04 | Phase 4 | Complete |
+| AGENT-05 | Phase 4 | Complete |
 | INST-01 | Phase 2 | Pending |
 | INST-02 | Phase 2 | Pending |
 | INST-03 | Phase 2 | Pending |
@@ -137,8 +139,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-05 | Phase 2 | Pending |
 | INST-06 | Phase 2 | Pending |
 | INST-07 | Phase 2 | Pending |
-| CMD-01 | Phase 4 | Pending |
-| CMD-02 | Phase 4 | Pending |
+| CMD-01 | Phase 4 | Partial (15/24) |
+| CMD-02 | Phase 4 | Complete |
 | CMD-03 | Phase 1 | Complete |
 | CMD-04 | Phase 2 | Pending |
 | HOOK-01 | Phase 5 | Pending |
@@ -167,4 +169,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-19*
-*Last updated: 2026-01-19 after initial definition*
+*Last updated: 2026-01-21 after Phase 4 completion*
