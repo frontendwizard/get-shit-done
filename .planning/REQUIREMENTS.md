@@ -46,10 +46,10 @@ Requirements for multi-platform support release. Each maps to roadmap phases.
 
 ### Lifecycle Hooks
 
-- [ ] **HOOK-01**: SessionStart abstraction (update checking, state loading)
-- [ ] **HOOK-02**: StatusLine abstraction with graceful degradation
-- [ ] **HOOK-03**: Hook registration in platform-specific format
-- [ ] **HOOK-04**: Hook execution verification
+- [x] **HOOK-01**: SessionStart abstraction (update checking, state loading)
+- [x] **HOOK-02**: StatusLine abstraction with graceful degradation
+- [x] **HOOK-03**: Hook registration in platform-specific format
+- [x] **HOOK-04**: Hook execution verification
 
 ### Project Portability
 
@@ -143,10 +143,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CMD-02 | Phase 4 | Complete |
 | CMD-03 | Phase 1 | Complete |
 | CMD-04 | Phase 2 | Pending |
-| HOOK-01 | Phase 5 | Pending |
-| HOOK-02 | Phase 5 | Pending |
-| HOOK-03 | Phase 5 | Pending |
-| HOOK-04 | Phase 5 | Pending |
+| HOOK-01 | Phase 5 | Complete |
+| HOOK-02 | Phase 5 | Complete |
+| HOOK-03 | Phase 5 | Complete |
+| HOOK-04 | Phase 5 | Complete |
 | PORT-01 | Phase 1 | Complete |
 | PORT-02 | Phase 1 | Complete |
 | PORT-03 | Phase 1 | Complete |
@@ -169,4 +169,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-19*
-*Last updated: 2026-01-21 after Phase 4 completion*
+*Last updated: 2026-01-21 after Phase 5 completion*

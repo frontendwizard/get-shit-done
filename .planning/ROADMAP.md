@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Claude Code Adapter & Backward Compatibility** - Extract existing logic to adapter with zero regression
 - [x] **Phase 3: OpenCode Adapter & Multi-Platform Installation** - Add second platform and installer
 - [x] **Phase 4: Agent Spawning Abstraction** - Abstract parallel agent orchestration across platforms
-- [ ] **Phase 5: Lifecycle Hooks** - StatusLine and SessionStart abstraction with graceful degradation
+- [x] **Phase 5: Lifecycle Hooks** - StatusLine and SessionStart abstraction with graceful degradation
 - [ ] **Phase 6: Testing & Validation** - Cross-platform test suite and regression prevention
 
 ## Phase Details
@@ -114,7 +114,7 @@ Plans:
 - [x] 05-01-PLAN.md — Adapter hook registration implementations
 - [x] 05-02-PLAN.md — Cross-platform install.js integration
 - [x] 05-03-PLAN.md — Optional hook disable config
-- [ ] 05-04-PLAN.md — Verification checkpoint
+- [x] 05-04-PLAN.md — Verification checkpoint
 
 ### Phase 6: Testing & Validation
 **Goal**: Cross-platform behavior is verified, regressions prevented, and documentation complete
@@ -142,5 +142,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Claude Code Adapter & Backward Compatibility | 5/5 | Complete | 2026-01-21 |
 | 3. OpenCode Adapter & Multi-Platform Installation | 5/5 | Complete | 2026-01-21 |
 | 4. Agent Spawning Abstraction | 7/7 | Complete | 2026-01-21 |
-| 5. Lifecycle Hooks | 3/4 | In progress | - |
+| 5. Lifecycle Hooks | 4/4 | Complete | 2026-01-21 |
 | 6. Testing & Validation | 0/? | Not started | - |
