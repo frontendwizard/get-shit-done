@@ -28,3 +28,11 @@ export { OpenCodeAdapter } from './adapters/opencode';
 // Agent instance implementations
 export { ClaudeCodeAgentInstance } from './adapters/claude-code-agent';
 export { OpenCodeAgentInstance } from './adapters/opencode-agent';
+
+// Parallel agent runner
+export {
+  spawnParallelAgents,
+  MultiAgentError,
+  AgentConfig,
+  AgentResult
+} from './agent-runner';
