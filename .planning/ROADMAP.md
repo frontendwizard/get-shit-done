@@ -108,10 +108,13 @@ Plans:
   2. StatusLine shows phase/plan context on Claude Code
   3. OpenCode displays equivalent context (best-effort, graceful degradation if unavailable)
   4. Hook registration succeeds on both platforms with verification
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] TBD during plan-phase
+- [ ] 05-01-PLAN.md — Adapter hook registration implementations
+- [ ] 05-02-PLAN.md — Cross-platform install.js integration
+- [ ] 05-03-PLAN.md — Optional hook disable config
+- [ ] 05-04-PLAN.md — Verification checkpoint
 
 ### Phase 6: Testing & Validation
 **Goal**: Cross-platform behavior is verified, regressions prevented, and documentation complete
@@ -139,5 +142,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Claude Code Adapter & Backward Compatibility | 5/5 | Complete | 2026-01-21 |
 | 3. OpenCode Adapter & Multi-Platform Installation | 5/5 | Complete | 2026-01-21 |
 | 4. Agent Spawning Abstraction | 7/7 | Complete | 2026-01-21 |
-| 5. Lifecycle Hooks | 0/? | Not started | - |
+| 5. Lifecycle Hooks | 0/4 | Planned | - |
 | 6. Testing & Validation | 0/? | Not started | - |
