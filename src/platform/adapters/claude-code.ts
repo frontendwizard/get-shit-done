@@ -117,6 +117,34 @@ export class ClaudeCodeAdapter implements PlatformAdapter {
     await this.writeConfig(config);
   }
 
+  /**
+   * Merge updates into existing configuration
+   *
+   * Simple shallow merge - NOT deep merge (Phase 4).
+   * Read existing config, merge updates, write back.
+   */
+  async mergeConfig(updates: Record<string, any>): Promise<void> {
+    const existing = await this.readConfig();
+    const merged = { ...existing, ...updates };
+    await this.writeConfig(merged);
+  }
+
+  // =========================================================================
+  // Platform capabilities - Claude Code supports everything
+  // =========================================================================
+
+  supportsParallelAgents(): boolean {
+    return true;
+  }
+
+  supportsStatusLine(): boolean {
+    return true;
+  }
+
+  supportsHooks(): boolean {
+    return true;
+  }
+
   // =========================================================================
   // Stubbed methods - Phase 4 implementation
   // =========================================================================
