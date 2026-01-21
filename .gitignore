@@ -19,3 +19,6 @@ dist/
 
 # TypeScript cache
 .tsbuildinfo
+
+# Test coverage output
+coverage/
