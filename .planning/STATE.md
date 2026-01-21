@@ -5,24 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-19)
 
 **Core value:** Platform independence - users choose AI platforms based on project needs, not tooling limitations
-**Current focus:** Phase 3 - OpenCode Adapter & Multi-Platform Installation
+**Current focus:** Phase 4 - Multi-Platform Agent Spawning
 
 ## Current Position
 
-Phase: 3 of 6 (OpenCode Adapter & Multi-Platform Installation)
-Plan: 5 of 5 in current phase
-Status: Phase complete
-Last activity: 2026-01-21 — Completed 03-05-PLAN.md (Multi-Platform Installation Verification)
+Phase: 4 of 6 (Multi-Platform Agent Spawning)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-21 — Completed 04-01-PLAN.md (Agent Instance Implementations)
 
-Progress: [██████████████] 93% (14/15 total plans across phases)
+Progress: [███████████████] 100% (15/15 total plans across phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
-- Total plans executed: 11 (3 gap closure plans had work already done)
-- Average duration: 3.8 min (excluding already-complete plans)
-- Total execution time: 0.70 hours
+- Total plans completed: 15
+- Total plans executed: 12 (3 gap closure plans had work already done)
+- Average duration: 3.5 min (excluding already-complete plans)
+- Total execution time: 0.73 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [██████████████] 93% (14/15 total plans ac
 | 1 | 5 | 5 | 7.6 min | 1.52 min |
 | 2 | 5 | 3 | 5.1 min | 1.70 min |
 | 3 | 5 | 3 | 29.0 min | 9.67 min |
+| 4 | 1 | 1 | 2.0 min | 2.00 min |
 
 **Recent Trend:**
-- Last 5 executed: 02-05 (1 min), 03-01 (1 min), 03-03 (1 min), 03-04 (12 min), 03-05 (15 min)
-- Trend: Phase 3 included gap closures (03-04) and comprehensive verification testing (03-05)
+- Last 5 executed: 03-01 (1 min), 03-03 (1 min), 03-04 (12 min), 03-05 (15 min), 04-01 (2 min)
+- Trend: Phase 4 started with focused implementation (AgentInstance classes)
 - Note: Plans 02-03, 02-04, 03-02, and 03-04 were gap closures (some included bug fixes + testing)
 
 *Updated after each plan completion*
@@ -114,6 +115,12 @@ Recent decisions affecting current work:
 - VERIFY-03: Phase 3 success criteria validated - both platforms install correctly with proper command registration
 - VERIFY-04: Automated verification tests confirm 24 commands registered on both platforms with valid markdown structure
 
+**From 04-01 execution:**
+- AGENT-01: Use 'close' event (not 'exit') for process completion (ensures streams fully closed, prevents missing output)
+- AGENT-02: Listen to 'error' event for spawn failures (spawn() doesn't throw immediately, errors emit via event)
+- AGENT-03: ClaudeCodeAgentInstance uses placeholder completion (Task tool is native to Claude Code, TypeScript provides tracking interface)
+- AGENT-04: OpenCodeAgentInstance includes getStderr() helper (useful for debugging failed agents)
+
 ### Pending Todos
 
 **Phase 2 Documentation Cleanup:**
@@ -136,15 +143,16 @@ Recent decisions affecting current work:
 - Command discoverability confirmed
 - No blockers identified
 
-**Phase 4 (Agent Spawning):**
-- Highest risk area - parallel agent spawning (4-7 agents) must work on both platforms
-- Silent failures likely if abstraction isn't bulletproof
-- Research flag set for Phase 4 planning
+**Phase 4 (Agent Spawning - In Progress):**
+- Plan 04-01 complete: AgentInstance implementations for both platforms
+- Reliable process monitoring with 'close' and 'error' events
+- No blockers identified
+- Ready for Plans 04-02 and 04-03 (spawnAgent implementations)
 
 ## Session Continuity
 
 Last session: 2026-01-21 (plan execution)
-Stopped at: Completed 03-05-PLAN.md (Multi-Platform Installation Verification) - Phase 3 complete
+Stopped at: Completed 04-01-PLAN.md (Agent Instance Implementations)
 Resume file: None
 
-Next action: Phase 3 complete (all 5 plans executed). Ready for Phase 4 (Multi-Platform Agent Spawning).
+Next action: Phase 4 in progress. Ready for 04-02 (Claude Code spawnAgent) and 04-03 (OpenCode spawnAgent).
