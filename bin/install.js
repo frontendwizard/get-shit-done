@@ -550,8 +550,9 @@ async function install(isGlobal, platform = 'claude-code') {
 /**
  * Apply statusline config, then print completion message
  */
-function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, platform) {
-  if (shouldInstallStatusline) {
+function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, platform, adapter) {
+  // Only configure statusline if platform supports it
+  if (shouldInstallStatusline && adapter.supportsStatusLine()) {
     settings.statusLine = {
       type: 'command',
       command: statuslineCommand
@@ -572,7 +573,13 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
 /**
  * Handle statusline configuration with optional prompt
  */
-function handleStatusline(settings, isInteractive, callback) {
+function handleStatusline(settings, isInteractive, adapter, callback) {
+  // Skip statusline entirely if platform doesn't support it
+  if (!adapter.supportsStatusLine()) {
+    callback(false);
+    return;
+  }
+
   const hasExisting = settings.statusLine != null;
 
   // No existing statusline - just install it
@@ -634,19 +641,18 @@ async function installForPlatform(isGlobal, platform, isInteractive) {
 
   const { settingsPath, settings, statuslineCommand } = await install(isGlobal, platform);
 
-  // Only handle statusline for Claude Code (OpenCode may not support it)
-  if (platform === 'claude-code') {
-    return new Promise((resolve) => {
-      handleStatusline(settings, isInteractive, (shouldInstallStatusline) => {
-        finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, platform);
-        resolve();
-      });
+  // Create adapter for capability checks (platform-specific)
+  const adapter = platform === 'opencode'
+    ? new OpenCodeAdapter()
+    : new ClaudeCodeAdapter();
+
+  // Handle statusline via adapter capability check (skips prompt if unsupported)
+  return new Promise((resolve) => {
+    handleStatusline(settings, isInteractive, adapter, (shouldInstallStatusline) => {
+      finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, platform, adapter);
+      resolve();
     });
-  } else {
-    // OpenCode: just write config and finish
-    writeSettings(settingsPath, settings);
-    console.log(`\n  ${green}Done!${reset} OpenCode installation complete.\n`);
-  }
+  });
 }
 
 /**
