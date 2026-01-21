@@ -527,8 +527,8 @@ async function install(isGlobal, platform = 'claude-code') {
     ? buildHookCommand(claudeDir, 'gsd-check-update.js')
     : 'node .claude/hooks/gsd-check-update.js';
 
-  // Register hooks only for Claude Code (OpenCode hooks deferred to Phase 5)
-  if (platform === 'claude-code') {
+  // Register hooks using adapter capability check (platform-agnostic)
+  if (adapter.supportsHooks()) {
     const hasGsdUpdateHook = settings.hooks?.SessionStart?.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'))
     );
@@ -538,6 +538,7 @@ async function install(isGlobal, platform = 'claude-code') {
       console.log(`  ${green}✓${reset} Configured update check hook`);
     }
   }
+  // No else clause - silent skip per graceful degradation
 
   // Re-read settings.json after adapter modifications to avoid data race
   // (adapter.registerHook() writes to disk, we need the updated state)
