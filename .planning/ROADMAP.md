@@ -88,10 +88,14 @@ Plans:
   3. Agent spawn failures are detected with clear error messages (no silent failures)
   4. Agent completion is verified and output collected from .planning/ files
   5. All 24 commands work on both platforms with correct argument passing
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] TBD during plan-phase
+- [ ] 04-01-PLAN.md — AgentInstance implementations for both platforms
+- [ ] 04-02-PLAN.md — Claude Code spawnAgent() implementation
+- [ ] 04-03-PLAN.md — OpenCode spawnAgent() with process spawning
+- [ ] 04-04-PLAN.md — Parallel agent execution helper
+- [ ] 04-05-PLAN.md — Integration testing and verification
 
 ### Phase 5: Lifecycle Hooks
 **Goal**: StatusLine and SessionStart equivalents work (or gracefully degrade) on both platforms
