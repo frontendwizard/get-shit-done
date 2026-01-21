@@ -17,13 +17,13 @@ Output ONLY the reference content below. Do NOT add:
 <reference>
 # GSD Command Reference
 
-**GSD** (Get Shit Done) creates hierarchical project plans optimized for solo agentic development with Claude Code.
+**GSD** (Get Shit Done) creates hierarchical project plans optimized for solo agentic development with Claude Code and OpenCode.
 
 ## Quick Start
 
-1. `/gsd:new-project` - Initialize project (includes research, requirements, roadmap)
-2. `/gsd:plan-phase 1` - Create detailed plan for first phase
-3. `/gsd:execute-phase 1` - Execute the phase
+1. `/gsd:new-project`* - Initialize project (includes research, requirements, roadmap)
+2. `/gsd:plan-phase 1`* - Create detailed plan for first phase
+3. `/gsd:execute-phase 1`* - Execute the phase
 
 ## Staying Updated
 
@@ -47,7 +47,7 @@ npx get-shit-done-cc@latest
 
 ### Project Initialization
 
-**`/gsd:new-project`**
+**`/gsd:new-project`***
 Initialize new project through unified flow.
 
 One command takes you from idea to ready-for-planning:
@@ -87,7 +87,7 @@ Help articulate your vision for a phase before planning.
 
 Usage: `/gsd:discuss-phase 2`
 
-**`/gsd:research-phase <number>`**
+**`/gsd:research-phase <number>`***
 Comprehensive ecosystem research for niche/complex domains.
 
 - Discovers standard stack, architecture patterns, pitfalls
@@ -106,7 +106,7 @@ See what Claude is planning to do before it starts.
 
 Usage: `/gsd:list-phase-assumptions 3`
 
-**`/gsd:plan-phase <number>`**
+**`/gsd:plan-phase <number>`***
 Create detailed execution plan for a specific phase.
 
 - Generates `.planning/phases/XX-phase-name/XX-YY-PLAN.md`
@@ -119,7 +119,7 @@ Result: Creates `.planning/phases/01-foundation/01-01-PLAN.md`
 
 ### Execution
 
-**`/gsd:execute-phase <phase-number>`**
+**`/gsd:execute-phase <phase-number>`***
 Execute all plans in a phase.
 
 - Groups plans by wave (from frontmatter), executes waves sequentially
@@ -178,7 +178,7 @@ Result: Phase 17 deleted, phases 18-20 become 17-19
 
 ### Milestone Management
 
-**`/gsd:new-milestone <name>`**
+**`/gsd:new-milestone <name>`***
 Start a new milestone through unified flow.
 
 - Deep questioning to understand what you're building next
@@ -190,7 +190,7 @@ Mirrors `/gsd:new-project` flow for brownfield projects (existing PROJECT.md).
 
 Usage: `/gsd:new-milestone "v2.0 Features"`
 
-**`/gsd:complete-milestone <version>`**
+**`/gsd:complete-milestone <version>`***
 Archive completed milestone and prepare for next version.
 
 - Creates MILESTONES.md entry with stats
@@ -236,7 +236,7 @@ Usage: `/gsd:pause-work`
 
 ### Debugging
 
-**`/gsd:debug [issue description]`**
+**`/gsd:debug [issue description]`***
 Systematic debugging with persistent state across context resets.
 
 - Gathers symptoms through adaptive questioning
@@ -351,6 +351,16 @@ Update GSD to latest version with changelog preview.
 - Better than raw `npx get-shit-done-cc`
 
 Usage: `/gsd:update`
+
+## Platform Compatibility
+
+Commands marked with **\*** require Claude Code's Task tool for multi-agent functionality. On OpenCode, these commands are not available because they spawn parallel agents for research, planning, and execution.
+
+**Claude Code Only (*):** new-project, new-milestone, plan-phase, execute-phase, research-phase, audit-milestone, debug, complete-milestone, verify-work, plan-milestone-gaps
+
+**Both Platforms:** All other commands (14 of 24 total)
+
+For full platform compatibility details, see `docs/PLATFORM-SUPPORT.md`.
 
 ## Files & Structure
 
