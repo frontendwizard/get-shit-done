@@ -205,6 +205,23 @@ async function promptPlatformSelection() {
 }
 
 /**
+ * Check if hooks are enabled in config
+ *
+ * Users can disable hooks by setting:
+ *   { "gsd": { "hooks": { "enabled": false } } }
+ *
+ * Default: true (hooks enabled if not specified)
+ */
+function areHooksEnabled(settings) {
+  // Default to enabled if not specified
+  if (!settings.gsd || !settings.gsd.hooks) {
+    return true;
+  }
+  // Explicitly false disables hooks
+  return settings.gsd.hooks.enabled !== false;
+}
+
+/**
  * Read and parse settings.json, returning empty object if doesn't exist
  */
 function readSettings(settingsPath) {
@@ -528,7 +545,8 @@ async function install(isGlobal, platform = 'claude-code') {
     : 'node .claude/hooks/gsd-check-update.js';
 
   // Register hooks using adapter capability check (platform-agnostic)
-  if (adapter.supportsHooks()) {
+  // Also check if user has disabled hooks via config
+  if (adapter.supportsHooks() && areHooksEnabled(settings)) {
     const hasGsdUpdateHook = settings.hooks?.SessionStart?.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'))
     );
@@ -537,8 +555,10 @@ async function install(isGlobal, platform = 'claude-code') {
       await adapter.registerHook('SessionStart', updateCheckCommand);
       console.log(`  ${green}✓${reset} Configured update check hook`);
     }
+  } else if (adapter.supportsHooks() && !areHooksEnabled(settings)) {
+    console.log(`  ${dim}Hooks disabled via config (gsd.hooks.enabled: false)${reset}`);
   }
-  // No else clause - silent skip per graceful degradation
+  // No else clause for !supportsHooks() - silent skip per graceful degradation
 
   // Re-read settings.json after adapter modifications to avoid data race
   // (adapter.registerHook() writes to disk, we need the updated state)
@@ -551,13 +571,15 @@ async function install(isGlobal, platform = 'claude-code') {
  * Apply statusline config, then print completion message
  */
 function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, platform, adapter) {
-  // Only configure statusline if platform supports it
-  if (shouldInstallStatusline && adapter.supportsStatusLine()) {
+  // Only configure statusline if platform supports it and hooks are enabled
+  if (shouldInstallStatusline && adapter.supportsStatusLine() && areHooksEnabled(settings)) {
     settings.statusLine = {
       type: 'command',
       command: statuslineCommand
     };
     console.log(`  ${green}✓${reset} Configured statusline`);
+  } else if (shouldInstallStatusline && adapter.supportsStatusLine() && !areHooksEnabled(settings)) {
+    console.log(`  ${dim}Statusline disabled via config (gsd.hooks.enabled: false)${reset}`);
   }
 
   // Always write settings (hooks were already configured in install())
