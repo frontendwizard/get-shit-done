@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 ## Current Position
 
 Phase: 6 of 6 (Testing & Validation)
-Plan: 1 of 6 in current phase
+Plan: 4 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-21 — Completed 06-01-PLAN.md (Testing infrastructure setup)
+Last activity: 2026-01-21 — Completed 06-04-PLAN.md (Agent runner and install adapter tests)
 
-Progress: [██████████████████████████░░░░] 84% (26/31 total plans across phases)
+Progress: [████████████████████████████░░] 87% (27/31 total plans across phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26
-- Total plans executed: 22 (4 plans were verification-only or gap closures)
+- Total plans completed: 27
+- Total plans executed: 23 (4 plans were verification-only or gap closures)
 - Average duration: 2.8 min (excluding verification-only plans)
-- Total execution time: 1.05 hours
+- Total execution time: 1.1 hours
 
 **By Phase:**
 
@@ -33,12 +33,12 @@ Progress: [███████████████████████
 | 3 | 5 | 3 | 29.0 min | 9.67 min |
 | 4 | 7 | 7 | 15.2 min | 2.17 min |
 | 5 | 4 | 3 | 6.0 min | 2.00 min |
-| 6 | 1 | 1 | 3.0 min | 3.00 min |
+| 6 | 2 | 2 | 6.0 min | 3.00 min |
 
 **Recent Trend:**
-- Last 5 executed: 05-02 (2 min), 05-03 (1 min), 05-04 (2 min), 06-01 (3 min)
-- Trend: Phase 6 started with testing infrastructure setup
-- Note: Plan 06-01 set up Vitest with memfs mocking
+- Last 5 executed: 05-03 (1 min), 05-04 (2 min), 06-01 (3 min), 06-04 (3 min)
+- Trend: Phase 6 testing authoring in progress
+- Note: Plan 06-04 added 16 unit tests for agent runner and install adapter
 
 *Updated after each plan completion*
 
@@ -171,6 +171,10 @@ Recent decisions affecting current work:
 - TEST-02: memfs for filesystem mocking (zero disk I/O in tests)
 - TEST-03: V8 coverage provider (faster than istanbul)
 
+**From 06-04 execution:**
+- TEST-04: Use mock adapter factory for PlatformAdapter testing (avoids real adapter initialization)
+- TEST-05: Mock AgentInstance with configurable success/failure for edge case testing
+
 ### Pending Todos
 
 **Phase 2 Documentation Cleanup:**
@@ -213,14 +217,14 @@ Recent decisions affecting current work:
 
 **Phase 6 (Testing & Validation - In Progress):**
 - Plan 06-01 complete: Vitest + memfs testing infrastructure
-- Testing infrastructure ready for test authoring
-- memfs mocks in place for filesystem isolation
-- V8 coverage reporting configured
+- Plan 06-04 complete: Agent runner and install adapter unit tests
+- 65 platform unit tests passing
+- Testing infrastructure ready for integration/E2E tests
 
 ## Session Continuity
 
 Last session: 2026-01-21 (plan execution)
-Stopped at: Completed 06-01-PLAN.md (Testing infrastructure)
+Stopped at: Completed 06-04-PLAN.md (Agent runner and install adapter tests)
 Resume file: None
 
-Next action: Continue with 06-02 (Platform detection tests)
+Next action: Continue with 06-05 (Integration tests) or 06-06 (E2E tests)
