@@ -117,19 +117,25 @@ export function runAdapterContractTests(
     // Config Methods Contract (async signature)
     // =========================================================================
     describe('Config Methods Contract', () => {
-      it('readConfig() returns a Promise', () => {
+      it('readConfig() returns a Promise', async () => {
         const result = adapter.readConfig();
         expect(result).toBeInstanceOf(Promise);
+        // Await to prevent unhandled rejections (may fail without mocks, that's ok)
+        await result.catch(() => {});
       });
 
-      it('writeConfig() returns a Promise', () => {
+      it('writeConfig() returns a Promise', async () => {
         const result = adapter.writeConfig({});
         expect(result).toBeInstanceOf(Promise);
+        // Await to prevent unhandled rejections (may fail without fs setup)
+        await result.catch(() => {});
       });
 
-      it('mergeConfig() returns a Promise', () => {
+      it('mergeConfig() returns a Promise', async () => {
         const result = adapter.mergeConfig({});
         expect(result).toBeInstanceOf(Promise);
+        // Await to prevent unhandled rejections (may fail without fs setup)
+        await result.catch(() => {});
       });
     });
 
@@ -137,14 +143,18 @@ export function runAdapterContractTests(
     // Hook Methods Contract (async signature)
     // =========================================================================
     describe('Hook Methods Contract', () => {
-      it('registerHook() returns a Promise', () => {
+      it('registerHook() returns a Promise', async () => {
         const result = adapter.registerHook('SessionStart', '/path/to/hook');
         expect(result).toBeInstanceOf(Promise);
+        // Await to prevent unhandled rejections
+        await result.catch(() => {});
       });
 
-      it('unregisterHook() returns a Promise', () => {
+      it('unregisterHook() returns a Promise', async () => {
         const result = adapter.unregisterHook('SessionStart');
         expect(result).toBeInstanceOf(Promise);
+        // Await to prevent unhandled rejections
+        await result.catch(() => {});
       });
     });
 
