@@ -13,7 +13,7 @@ Transform GSD from Claude Code-specific to platform-agnostic workflow orchestrat
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Platform Abstraction Foundation** - Build core adapter infrastructure and registry
-- [ ] **Phase 2: Claude Code Adapter & Backward Compatibility** - Extract existing logic to adapter with zero regression
+- [x] **Phase 2: Claude Code Adapter & Backward Compatibility** - Extract existing logic to adapter with zero regression
 - [ ] **Phase 3: OpenCode Adapter & Multi-Platform Installation** - Add second platform and installer
 - [ ] **Phase 4: Agent Spawning Abstraction** - Abstract parallel agent orchestration across platforms
 - [ ] **Phase 5: Lifecycle Hooks** - StatusLine and SessionStart abstraction with graceful degradation
@@ -56,8 +56,8 @@ Plans:
 - [x] 02-01-PLAN.md — Lean ClaudeCodeAdapter implementation
 - [x] 02-02-PLAN.md — Minimal install.js integration
 - [x] 02-03-PLAN.md — Simple verification checkpoint
-- [ ] 02-04-PLAN.md — [GAP CLOSURE] Fix hook registration data race
-- [ ] 02-05-PLAN.md — [GAP CLOSURE] Add configuration backup mechanism
+- [x] 02-04-PLAN.md — [GAP CLOSURE] Fix hook registration data race
+- [x] 02-05-PLAN.md — [GAP CLOSURE] Add configuration backup mechanism
 
 ### Phase 3: OpenCode Adapter & Multi-Platform Installation
 **Goal**: Users can install GSD for OpenCode and execute basic workflows on both platforms
@@ -126,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Abstraction Foundation | 5/5 | Complete | 2026-01-20 |
-| 2. Claude Code Adapter & Backward Compatibility | 3/5 | Gap closure in progress | - |
+| 2. Claude Code Adapter & Backward Compatibility | 5/5 | Complete | 2026-01-21 |
 | 3. OpenCode Adapter & Multi-Platform Installation | 0/? | Not started | - |
 | 4. Agent Spawning Abstraction | 0/? | Not started | - |
 | 5. Lifecycle Hooks | 0/? | Not started | - |
