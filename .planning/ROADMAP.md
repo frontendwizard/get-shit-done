@@ -126,10 +126,15 @@ Plans:
   3. Integration tests validate installation on both platforms
   4. Regression tests confirm Claude Code behavior unchanged from 1.x
   5. Same .planning/ directory works on both platforms (cross-platform validation)
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] TBD during plan-phase
+- [ ] 06-01-PLAN.md — Vitest infrastructure setup
+- [ ] 06-02-PLAN.md — Platform detection, paths, registry unit tests
+- [ ] 06-03-PLAN.md — Adapter contract tests (TEST-02)
+- [ ] 06-04-PLAN.md — Agent runner and install adapter tests
+- [ ] 06-05-PLAN.md — Regression and cross-platform tests (TEST-04, TEST-05)
+- [ ] 06-06-PLAN.md — Final verification checkpoint
 
 ## Progress
 
@@ -143,4 +148,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. OpenCode Adapter & Multi-Platform Installation | 5/5 | Complete | 2026-01-21 |
 | 4. Agent Spawning Abstraction | 7/7 | Complete | 2026-01-21 |
 | 5. Lifecycle Hooks | 4/4 | Complete | 2026-01-21 |
-| 6. Testing & Validation | 0/? | Not started | - |
+| 6. Testing & Validation | 0/6 | Planning complete | - |
