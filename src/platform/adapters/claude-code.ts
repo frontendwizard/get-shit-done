@@ -96,8 +96,8 @@ export class ClaudeCodeAdapter implements PlatformAdapter {
   /**
    * Register hook in Claude Code settings.json
    *
-   * Modifies hooks array with simple append.
-   * No deduplication needed for fresh installs.
+   * Idempotent: checks for existing hook before adding.
+   * Multiple calls with same hookPath don't create duplicates.
    */
   async registerHook(hookType: HookType, hookPath: string): Promise<void> {
     const config = await this.readConfig();
@@ -110,7 +110,20 @@ export class ClaudeCodeAdapter implements PlatformAdapter {
       config.hooks[hookType] = [];
     }
 
-    // Simple append - install.js handles deduplication
+    // Idempotency check: does hook already exist?
+    // Pattern from install.js: check if any entry has the hookPath in command
+    const hasHook = config.hooks[hookType].some((entry: { hooks?: Array<{ command?: string }> }) =>
+      entry.hooks && entry.hooks.some((h: { command?: string }) =>
+        h.command && h.command.includes(hookPath)
+      )
+    );
+
+    if (hasHook) {
+      // Already registered, return early (idempotent behavior)
+      return;
+    }
+
+    // Add hook entry with nested structure
     config.hooks[hookType].push({
       hooks: [{ type: 'command', command: hookPath }]
     });
