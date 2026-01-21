@@ -42,7 +42,7 @@ export interface PathResolver {
   /**
    * Get directory for GSD slash commands
    * - Claude Code: ~/.claude/commands/gsd/
-   * - OpenCode: ~/.config/opencode/commands/
+   * - OpenCode: ~/.config/opencode/command/gsd/
    *
    * @returns Absolute path to commands directory
    */
@@ -154,11 +154,11 @@ export class OpenCodePaths implements PathResolver {
 
   /**
    * Get OpenCode commands directory
-   * Structure: {configDir}/commands/
-   * Note: OpenCode does NOT use 'gsd' subdirectory (flatter structure)
+   * Structure: {configDir}/command/gsd/
+   * Note: OpenCode uses 'command' (singular) and 'gsd' subdirectory for namespacing
    */
   getCommandsDir(): string {
-    return path.join(this.getConfigDir(), 'commands');
+    return path.join(this.getConfigDir(), 'command', 'gsd');
   }
 
   /**
