@@ -50,12 +50,14 @@ Plans:
   3. Active .planning/ projects continue working without modification after upgrade
   4. Installation handles configuration backup, orphaned file cleanup, and collision detection
   5. Non-interactive mode supports CI/Docker environments
-**Plans**: 3 plans
+**Plans**: 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Lean ClaudeCodeAdapter implementation
-- [ ] 02-02-PLAN.md — Minimal install.js integration
-- [ ] 02-03-PLAN.md — Simple verification checkpoint
+- [x] 02-01-PLAN.md — Lean ClaudeCodeAdapter implementation
+- [x] 02-02-PLAN.md — Minimal install.js integration
+- [x] 02-03-PLAN.md — Simple verification checkpoint
+- [ ] 02-04-PLAN.md — [GAP CLOSURE] Fix hook registration data race
+- [ ] 02-05-PLAN.md — [GAP CLOSURE] Add configuration backup mechanism
 
 ### Phase 3: OpenCode Adapter & Multi-Platform Installation
 **Goal**: Users can install GSD for OpenCode and execute basic workflows on both platforms
@@ -124,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Platform Abstraction Foundation | 5/5 | Complete | 2026-01-20 |
-| 2. Claude Code Adapter & Backward Compatibility | 0/3 | Not started | - |
+| 2. Claude Code Adapter & Backward Compatibility | 3/5 | Gap closure in progress | - |
 | 3. OpenCode Adapter & Multi-Platform Installation | 0/? | Not started | - |
 | 4. Agent Spawning Abstraction | 0/? | Not started | - |
 | 5. Lifecycle Hooks | 0/? | Not started | - |
