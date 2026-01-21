@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 ## Current Position
 
 Phase: 5 of 6 (Lifecycle Hooks)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-21 — Completed 05-01-PLAN.md (Adapter Hook Registration)
+Last activity: 2026-01-21 — Completed 05-02-PLAN.md (Cross-platform install.js integration)
 
-Progress: [██████████████████████░░░] 88% (22/25 total plans across phases)
+Progress: [███████████████████████░░] 92% (23/25 total plans across phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Total plans executed: 19 (3 gap closure plans had work already done)
+- Total plans completed: 23
+- Total plans executed: 20 (3 gap closure plans had work already done)
 - Average duration: 2.9 min (excluding already-complete plans)
-- Total execution time: 0.93 hours
+- Total execution time: 0.96 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [██████████████████████░
 | 2 | 5 | 3 | 5.1 min | 1.70 min |
 | 3 | 5 | 3 | 29.0 min | 9.67 min |
 | 4 | 7 | 7 | 15.2 min | 2.17 min |
-| 5 | 1 | 1 | 1.0 min | 1.00 min |
+| 5 | 2 | 2 | 3.0 min | 1.50 min |
 
 **Recent Trend:**
-- Last 5 executed: 04-05 (3 min), 04-06 (3 min), 04-07 (3 min), 05-01 (1 min)
-- Trend: Phase 5 started with fast adapter hook implementation
+- Last 5 executed: 04-06 (3 min), 04-07 (3 min), 05-01 (1 min), 05-02 (2 min)
+- Trend: Phase 5 continues with fast capability-based integration
 - Note: Plans 02-03, 02-04, 03-02, and 03-04 were gap closures (some included bug fixes + testing)
 
 *Updated after each plan completion*
@@ -154,6 +154,10 @@ Recent decisions affecting current work:
 - HOOK-05: ClaudeCodeAdapter.registerHook() checks for existing hook before adding (idempotent - prevents duplicates)
 - HOOK-06: OpenCodeAdapter hook methods return silently without error (per CONTEXT.md decision: silent skip)
 
+**From 05-02 execution:**
+- INSTALL-02: Use adapter.supportsHooks() instead of platform === 'claude-code' for hook registration
+- INSTALL-03: Use adapter.supportsStatusLine() instead of hardcoded platform checks for statusline config
+
 ### Pending Todos
 
 **Phase 2 Documentation Cleanup:**
@@ -183,14 +187,16 @@ Recent decisions affecting current work:
 
 **Phase 5 (Lifecycle Hooks - In Progress):**
 - Plan 05-01 complete: Adapter hook registration methods
-- ClaudeCodeAdapter.registerHook() is idempotent
-- OpenCodeAdapter hook methods return silently (graceful degradation)
-- Ready for 05-02: install.js integration
+- Plan 05-02 complete: Cross-platform install.js integration
+- install.js uses adapter.supportsHooks() and adapter.supportsStatusLine()
+- Claude Code: Registers hooks and statusline
+- OpenCode: Silently skips hooks and statusline
+- Ready for 05-03: Human verification of cross-platform installation
 
 ## Session Continuity
 
 Last session: 2026-01-21 (plan execution)
-Stopped at: Completed 05-01-PLAN.md (Adapter Hook Registration)
+Stopped at: Completed 05-02-PLAN.md (Cross-platform install.js integration)
 Resume file: None
 
-Next action: Continue with 05-02-PLAN.md (Cross-platform install.js integration)
+Next action: Continue with 05-03-PLAN.md (Human verification of cross-platform installation)
