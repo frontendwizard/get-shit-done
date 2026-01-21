@@ -13,6 +13,7 @@
 import * as path from 'path';
 import * as os from 'os';
 import { PlatformRegistry } from './registry';
+import { ClaudeCodePaths, OpenCodePaths } from './paths';
 
 /**
  * Installation paths structure
@@ -37,56 +38,68 @@ export interface InstallPaths {
  *
  * Handles both global and local installations:
  * - Global: Uses platform detection to resolve paths
- * - Local: Bypasses platform detection, uses ./.claude/ directly
+ * - Local: Bypasses platform detection, uses platform-specific local directory
  *
  * @param isGlobal - Whether this is a global installation
  * @param explicitConfigDir - User-provided --config-dir value (null if not provided)
+ * @param platform - Target platform ('claude-code' | 'opencode'), defaults to 'claude-code' for backward compatibility
  * @returns Installation paths structure
  */
 export function getInstallPaths(
   isGlobal: boolean,
-  explicitConfigDir: string | null
+  explicitConfigDir: string | null = null,
+  platform: 'claude-code' | 'opencode' = 'claude-code'
 ): InstallPaths {
-  // Local install: platform-agnostic, just use ./.claude/
+  // Local install: use platform-specific local directory
   if (!isGlobal) {
     const cwd = process.cwd();
-    const configDir = path.join(cwd, '.claude');
+    const localDirName = platform === 'opencode' ? '.opencode' : '.claude';
+    const configDir = path.join(cwd, localDirName);
+
+    // Commands directory uses platform-specific structure
+    // Claude Code: commands/gsd, OpenCode: command/gsd (singular)
+    const commandsSubdir = platform === 'opencode' ? 'command' : 'commands';
+
     return {
       configDir,
-      commandsDir: path.join(configDir, 'commands', 'gsd'),
+      commandsDir: path.join(configDir, commandsSubdir, 'gsd'),
       agentsDir: path.join(configDir, 'agents'),
       hooksDir: path.join(configDir, 'hooks'),
-      pathPrefix: './.claude/',
+      pathPrefix: `./${localDirName}/`,
     };
   }
 
-  // Global install: use platform detection
-  const resolver = PlatformRegistry.getPathResolver();
+  // Global install: use platform-specific path resolver
+  // Select resolver based on platform parameter
+  const resolver = platform === 'opencode'
+    ? new OpenCodePaths()
+    : new ClaudeCodePaths();
 
   // Determine config directory
   // Priority: explicit --config-dir > platform-detected path
+  // Note: explicitConfigDir only applies to Claude Code (CLAUDE_CONFIG_DIR)
   let configDir: string;
-  if (explicitConfigDir) {
+  if (explicitConfigDir && platform === 'claude-code') {
     configDir = expandTilde(explicitConfigDir);
   } else {
     configDir = resolver.getConfigDir();
   }
 
   // Get other directories from resolver
-  // Note: For Claude Code, commandsDir will be {configDir}/commands/gsd
-  //       For explicit configDir, we need to construct the full path
+  // Note: Commands directory structure differs by platform:
+  //   - Claude Code: {configDir}/commands/gsd
+  //   - OpenCode: {configDir}/command/gsd (singular)
   let commandsDir: string;
   let agentsDir: string;
   let hooksDir: string;
 
-  if (explicitConfigDir) {
-    // When user provides explicit config dir, construct paths manually
-    // to match the structure they expect
+  if (explicitConfigDir && platform === 'claude-code') {
+    // When user provides explicit config dir for Claude Code, construct paths manually
     commandsDir = path.join(configDir, 'commands', 'gsd');
     agentsDir = path.join(configDir, 'agents');
     hooksDir = path.join(configDir, 'hooks');
   } else {
-    // Use platform-specific paths
+    // Use platform-specific paths from resolver
     commandsDir = resolver.getCommandsDir();
     agentsDir = resolver.getAgentsDir();
     hooksDir = resolver.getHooksDir();
@@ -94,7 +107,8 @@ export function getInstallPaths(
 
   // Determine path prefix for markdown file replacements
   // Use ~ shorthand when possible for cleaner docs
-  const pathPrefix = explicitConfigDir
+  // Platform-aware: OpenCode typically uses ~/.config/opencode/ vs Claude Code ~/.claude/
+  const pathPrefix = (explicitConfigDir && platform === 'claude-code')
     ? `${configDir}/`
     : configDir.replace(os.homedir(), '~') + '/';
 
