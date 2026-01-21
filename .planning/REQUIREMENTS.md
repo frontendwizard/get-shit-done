@@ -13,7 +13,7 @@ Requirements for multi-platform support release. Each maps to roadmap phases.
 - [ ] **PLAT-02**: Platform adapter interface defining common contract for all platforms
 - [ ] **PLAT-03**: Platform registry with factory pattern for adapter loading
 - [ ] **PLAT-04**: Claude Code adapter wrapping existing functionality (zero regression)
-- [ ] **PLAT-05**: OpenCode adapter implementing platform interface
+- [x] **PLAT-05**: OpenCode adapter implementing platform interface
 - [ ] **PLAT-06**: Path resolution abstraction (~/.claude/ vs ~/.config/opencode/)
 - [ ] **PLAT-07**: Configuration file abstraction (settings.json vs opencode.jsonc)
 
@@ -122,7 +122,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PLAT-02 | Phase 1 | Complete |
 | PLAT-03 | Phase 1 | Complete |
 | PLAT-04 | Phase 2 | Pending |
-| PLAT-05 | Phase 3 | Pending |
+| PLAT-05 | Phase 3 | Complete |
 | PLAT-06 | Phase 1 | Complete |
 | PLAT-07 | Phase 2 | Pending |
 | AGENT-01 | Phase 4 | Pending |

@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Platform Abstraction Foundation** - Build core adapter infrastructure and registry
 - [x] **Phase 2: Claude Code Adapter & Backward Compatibility** - Extract existing logic to adapter with zero regression
-- [ ] **Phase 3: OpenCode Adapter & Multi-Platform Installation** - Add second platform and installer
+- [x] **Phase 3: OpenCode Adapter & Multi-Platform Installation** - Add second platform and installer
 - [ ] **Phase 4: Agent Spawning Abstraction** - Abstract parallel agent orchestration across platforms
 - [ ] **Phase 5: Lifecycle Hooks** - StatusLine and SessionStart abstraction with graceful degradation
 - [ ] **Phase 6: Testing & Validation** - Cross-platform test suite and regression prevention
@@ -72,11 +72,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Dependencies and OpenCodePaths fix
-- [ ] 03-02-PLAN.md — OpenCodeAdapter implementation
-- [ ] 03-03-PLAN.md — Multi-platform install-adapter
-- [ ] 03-04-PLAN.md — Multi-platform installer TUI
-- [ ] 03-05-PLAN.md — Verification checkpoint
+- [x] 03-01-PLAN.md — Dependencies and OpenCodePaths fix
+- [x] 03-02-PLAN.md — OpenCodeAdapter implementation
+- [x] 03-03-PLAN.md — Multi-platform install-adapter
+- [x] 03-04-PLAN.md — Multi-platform installer TUI
+- [x] 03-05-PLAN.md — Verification checkpoint
 
 ### Phase 4: Agent Spawning Abstraction
 **Goal**: GSD workflows can spawn parallel agents (4-7 simultaneously) on both platforms transparently
