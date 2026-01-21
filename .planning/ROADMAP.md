@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Platform Abstraction Foundation** - Build core adapter infrastructure and registry
 - [x] **Phase 2: Claude Code Adapter & Backward Compatibility** - Extract existing logic to adapter with zero regression
 - [x] **Phase 3: OpenCode Adapter & Multi-Platform Installation** - Add second platform and installer
-- [ ] **Phase 4: Agent Spawning Abstraction** - Abstract parallel agent orchestration across platforms
+- [x] **Phase 4: Agent Spawning Abstraction** - Abstract parallel agent orchestration across platforms
 - [ ] **Phase 5: Lifecycle Hooks** - StatusLine and SessionStart abstraction with graceful degradation
 - [ ] **Phase 6: Testing & Validation** - Cross-platform test suite and regression prevention
 
@@ -96,8 +96,8 @@ Plans:
 - [x] 04-03-PLAN.md — OpenCode spawnAgent() with process spawning
 - [x] 04-04-PLAN.md — Parallel agent execution helper
 - [x] 04-05-PLAN.md — Integration testing and verification
-- [ ] 04-06-PLAN.md — [GAP CLOSURE] Platform compatibility documentation
-- [ ] 04-07-PLAN.md — [GAP CLOSURE] Update requirements and roadmap accuracy
+- [x] 04-06-PLAN.md — [GAP CLOSURE] Platform compatibility documentation
+- [x] 04-07-PLAN.md — [GAP CLOSURE] Update requirements and roadmap accuracy
 
 ### Phase 5: Lifecycle Hooks
 **Goal**: StatusLine and SessionStart equivalents work (or gracefully degrade) on both platforms
@@ -138,6 +138,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Platform Abstraction Foundation | 5/5 | Complete | 2026-01-20 |
 | 2. Claude Code Adapter & Backward Compatibility | 5/5 | Complete | 2026-01-21 |
 | 3. OpenCode Adapter & Multi-Platform Installation | 5/5 | Complete | 2026-01-21 |
-| 4. Agent Spawning Abstraction | 5/7 | Gap closure | 2026-01-21 |
+| 4. Agent Spawning Abstraction | 7/7 | Complete | 2026-01-21 |
 | 5. Lifecycle Hooks | 0/? | Not started | - |
 | 6. Testing & Validation | 0/? | Not started | - |
