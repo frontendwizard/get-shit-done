@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 ## Current Position
 
 Phase: 4 of 6 (Multi-Platform Agent Spawning)
-Plan: 1 of 3 in current phase
+Plan: 3 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-21 — Completed 04-01-PLAN.md (Agent Instance Implementations)
+Last activity: 2026-01-21 — Completed 04-03-PLAN.md (OpenCode spawnAgent Implementation)
 
-Progress: [███████████████] 100% (15/15 total plans across phases)
+Progress: [███████████████] 100% (17/17 total plans across phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
-- Total plans executed: 12 (3 gap closure plans had work already done)
-- Average duration: 3.5 min (excluding already-complete plans)
-- Total execution time: 0.73 hours
+- Total plans completed: 17
+- Total plans executed: 14 (3 gap closure plans had work already done)
+- Average duration: 3.1 min (excluding already-complete plans)
+- Total execution time: 0.77 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [███████████████] 100% (15/15 total plan
 | 1 | 5 | 5 | 7.6 min | 1.52 min |
 | 2 | 5 | 3 | 5.1 min | 1.70 min |
 | 3 | 5 | 3 | 29.0 min | 9.67 min |
-| 4 | 1 | 1 | 2.0 min | 2.00 min |
+| 4 | 3 | 3 | 3.2 min | 1.07 min |
 
 **Recent Trend:**
-- Last 5 executed: 03-01 (1 min), 03-03 (1 min), 03-04 (12 min), 03-05 (15 min), 04-01 (2 min)
-- Trend: Phase 4 started with focused implementation (AgentInstance classes)
+- Last 5 executed: 03-03 (1 min), 03-04 (12 min), 03-05 (15 min), 04-01 (2 min), 04-03 (1 min)
+- Trend: Phase 4 completing with fast implementation (AgentInstance + spawnAgent methods)
 - Note: Plans 02-03, 02-04, 03-02, and 03-04 were gap closures (some included bug fixes + testing)
 
 *Updated after each plan completion*
@@ -121,6 +121,12 @@ Recent decisions affecting current work:
 - AGENT-03: ClaudeCodeAgentInstance uses placeholder completion (Task tool is native to Claude Code, TypeScript provides tracking interface)
 - AGENT-04: OpenCodeAgentInstance includes getStderr() helper (useful for debugging failed agents)
 
+**From 04-03 execution:**
+- AGENT-05: Use array arguments (NOT shell: true) to prevent shell injection vulnerabilities
+- AGENT-06: Generate unique agent IDs with timestamp suffix for tracking and debugging
+- AGENT-07: Validate agent file existence before spawning to provide clear error messages
+- AGENT-08: Use --non-interactive flag for OpenCode CLI to prevent TUI from launching
+
 ### Pending Todos
 
 **Phase 2 Documentation Cleanup:**
@@ -145,14 +151,16 @@ Recent decisions affecting current work:
 
 **Phase 4 (Agent Spawning - In Progress):**
 - Plan 04-01 complete: AgentInstance implementations for both platforms
+- Plan 04-03 complete: OpenCode spawnAgent() with child_process.spawn()
 - Reliable process monitoring with 'close' and 'error' events
+- Security-hardened spawn with array arguments (no shell injection)
+- Ready for Plan 04-02 (Claude Code spawnAgent)
 - No blockers identified
-- Ready for Plans 04-02 and 04-03 (spawnAgent implementations)
 
 ## Session Continuity
 
 Last session: 2026-01-21 (plan execution)
-Stopped at: Completed 04-01-PLAN.md (Agent Instance Implementations)
+Stopped at: Completed 04-03-PLAN.md (OpenCode spawnAgent Implementation)
 Resume file: None
 
-Next action: Phase 4 in progress. Ready for 04-02 (Claude Code spawnAgent) and 04-03 (OpenCode spawnAgent).
+Next action: Phase 4 in progress. Ready for 04-02 (Claude Code spawnAgent) to complete agent spawning abstraction.
