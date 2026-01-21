@@ -5,7 +5,17 @@ const path = require('path');
 const os = require('os');
 const readline = require('readline');
 const { getInstallPaths } = require('../dist/platform/install-adapter');
-const { ClaudeCodeAdapter } = require('../dist/platform');
+const { ClaudeCodeAdapter, OpenCodeAdapter } = require('../dist/platform');
+
+// Dynamic import for ESM module (checkbox is ESM-only)
+let checkbox;
+async function loadCheckbox() {
+  if (!checkbox) {
+    const module = await import('@inquirer/checkbox');
+    checkbox = module.default;
+  }
+  return checkbox;
+}
 
 // Colors
 const cyan = '\x1b[36m';
@@ -60,6 +70,26 @@ function parseConfigDirArg() {
   return null;
 }
 const explicitConfigDir = parseConfigDirArg();
+
+// Parse --platform argument
+function parsePlatformArg() {
+  const platformIndex = args.findIndex(arg => arg === '--platform' || arg === '-p');
+  if (platformIndex !== -1) {
+    const nextArg = args[platformIndex + 1];
+    if (!nextArg || nextArg.startsWith('-')) {
+      console.error(`  ${yellow}--platform requires a value (claude-code, opencode, or both)${reset}`);
+      process.exit(1);
+    }
+    return nextArg;
+  }
+  const platformArg = args.find(arg => arg.startsWith('--platform=') || arg.startsWith('-p='));
+  if (platformArg) {
+    return platformArg.split('=')[1];
+  }
+  return null;
+}
+const explicitPlatform = parsePlatformArg();
+
 const hasHelp = args.includes('--help') || args.includes('-h');
 const forceStatusline = args.includes('--force-statusline');
 
@@ -73,6 +103,7 @@ if (hasHelp) {
     ${cyan}-g, --global${reset}              Install globally (to Claude config directory)
     ${cyan}-l, --local${reset}               Install locally (to ./.claude in current directory)
     ${cyan}-c, --config-dir <path>${reset}   Specify custom Claude config directory
+    ${cyan}-p, --platform <value>${reset}    Platform to install for (claude-code, opencode, or both)
     ${cyan}-h, --help${reset}                Show this help message
     ${cyan}--force-statusline${reset}        Replace existing statusline config
 
@@ -88,6 +119,9 @@ if (hasHelp) {
 
     ${dim}# Install to current project only${reset}
     npx get-shit-done-cc --local
+
+    ${dim}# Install for both platforms${reset}
+    npx get-shit-done-cc --global --platform=both
 
   ${yellow}Notes:${reset}
     The --config-dir option is useful when you have multiple Claude Code
@@ -115,6 +149,59 @@ function buildHookCommand(claudeDir, hookName) {
   // Use forward slashes for Node.js compatibility on all platforms
   const hooksPath = claudeDir.replace(/\\/g, '/') + '/hooks/' + hookName;
   return `node "${hooksPath}"`;
+}
+
+/**
+ * Prompt for platform selection (multi-select checkbox)
+ * Returns array of platforms: ['claude-code'] or ['opencode'] or ['claude-code', 'opencode']
+ */
+async function promptPlatformSelection() {
+  // Non-interactive: use flag or default
+  if (!process.stdin.isTTY) {
+    if (explicitPlatform === 'both') {
+      console.log(`  ${yellow}Installing for both platforms (--platform=both)${reset}\n`);
+      return ['claude-code', 'opencode'];
+    } else if (explicitPlatform === 'opencode') {
+      console.log(`  ${yellow}Installing for OpenCode (--platform=opencode)${reset}\n`);
+      return ['opencode'];
+    } else {
+      console.log(`  ${yellow}Non-interactive mode, defaulting to Claude Code${reset}`);
+      console.log(`  ${dim}Use --platform=opencode or --platform=both to override${reset}\n`);
+      return ['claude-code'];
+    }
+  }
+
+  // Explicit flag provided in interactive mode
+  if (explicitPlatform) {
+    if (explicitPlatform === 'both') {
+      return ['claude-code', 'opencode'];
+    } else if (explicitPlatform === 'opencode') {
+      return ['opencode'];
+    } else if (explicitPlatform === 'claude-code') {
+      return ['claude-code'];
+    } else {
+      console.error(`  ${yellow}Invalid --platform value: ${explicitPlatform}${reset}`);
+      console.error(`  ${dim}Valid values: claude-code, opencode, both${reset}\n`);
+      process.exit(1);
+    }
+  }
+
+  // Interactive: show checkbox UI
+  const cb = await loadCheckbox();
+  console.log(`  ${yellow}Which platform(s) would you like to install for?${reset}\n`);
+
+  const platforms = await cb({
+    message: 'Select platform(s):',
+    choices: [
+      { name: 'Claude Code', value: 'claude-code', checked: false },
+      { name: 'OpenCode', value: 'opencode', checked: false }
+    ],
+    required: true,
+    instructions: '(Press space to select, enter to confirm)'
+  });
+
+  console.log(''); // Blank line after selection
+  return platforms;
 }
 
 /**
@@ -152,6 +239,19 @@ function backupSettings(settingsPath) {
 }
 
 /**
+ * Create backup of config file before modification
+ * Uses platform-specific backup filename
+ */
+function backupConfigFile(configPath, platform) {
+  if (fs.existsSync(configPath)) {
+    const backupPath = configPath + '.backup';
+    fs.copyFileSync(configPath, backupPath);
+    return backupPath;
+  }
+  return null;
+}
+
+/**
  * Recursively copy directory, replacing paths in .md files
  * Deletes existing destDir first to remove orphaned files from previous versions
  */
@@ -183,12 +283,15 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix) {
 
 /**
  * Clean up orphaned files from previous GSD versions
+ * Platform-specific cleanup
  */
-function cleanupOrphanedFiles(claudeDir) {
-  const orphanedFiles = [
-    'hooks/gsd-notify.sh',  // Removed in v1.6.x
-    'hooks/statusline.js',  // Renamed to gsd-statusline.js in v1.9.0
-  ];
+function cleanupOrphanedFiles(claudeDir, platform) {
+  const orphanedFiles = platform === 'claude-code'
+    ? [
+        'hooks/gsd-notify.sh',  // Removed in v1.6.x
+        'hooks/statusline.js',  // Renamed to gsd-statusline.js in v1.9.0
+      ]
+    : [];  // No OpenCode orphans yet
 
   for (const relPath of orphanedFiles) {
     const fullPath = path.join(claudeDir, relPath);
@@ -279,16 +382,18 @@ function verifyFileInstalled(filePath, description) {
 /**
  * Install to the specified directory
  */
-async function install(isGlobal) {
+async function install(isGlobal, platform = 'claude-code') {
   const src = path.join(__dirname, '..');
 
   // Get platform-aware installation paths
-  const paths = getInstallPaths(isGlobal, explicitConfigDir);
+  const paths = getInstallPaths(isGlobal, explicitConfigDir, platform);
   const { configDir, commandsDir, agentsDir, hooksDir, pathPrefix } = paths;
   const claudeDir = configDir;  // Alias for backward compatibility with existing code
 
-  // Create adapter for hook registration
-  const adapter = new ClaudeCodeAdapter();
+  // Create adapter for hook registration (platform-specific)
+  const adapter = platform === 'opencode'
+    ? new OpenCodeAdapter()
+    : new ClaudeCodeAdapter();
 
   const locationLabel = isGlobal
     ? claudeDir.replace(os.homedir(), '~')
@@ -300,7 +405,7 @@ async function install(isGlobal) {
   const failures = [];
 
   // Clean up orphaned files from previous versions
-  cleanupOrphanedFiles(claudeDir);
+  cleanupOrphanedFiles(claudeDir, platform);
 
   // Create commands directory and copy commands/gsd with path replacement
   fs.mkdirSync(commandsDir, { recursive: true });
@@ -401,13 +506,14 @@ async function install(isGlobal) {
     process.exit(1);
   }
 
-  // Configure statusline and hooks in settings.json
-  const settingsPath = path.join(claudeDir, 'settings.json');
+  // Configure statusline and hooks in settings.json (Claude Code) or opencode.json (OpenCode)
+  const configFileName = platform === 'opencode' ? 'opencode.json' : 'settings.json';
+  const settingsPath = path.join(claudeDir, configFileName);
 
   // Backup existing settings before any modifications (INST-05)
-  const backupPath = backupSettings(settingsPath);
+  const backupPath = backupConfigFile(settingsPath, platform);
   if (backupPath) {
-    console.log(`  ${green}✓${reset} Backed up settings.json`);
+    console.log(`  ${green}✓${reset} Backed up ${configFileName}`);
   }
 
   const settings = cleanupOrphanedHooks(readSettings(settingsPath));
@@ -418,14 +524,16 @@ async function install(isGlobal) {
     ? buildHookCommand(claudeDir, 'gsd-check-update.js')
     : 'node .claude/hooks/gsd-check-update.js';
 
-  // Register hooks using adapter
-  const hasGsdUpdateHook = settings.hooks?.SessionStart?.some(entry =>
-    entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'))
-  );
+  // Register hooks only for Claude Code (OpenCode hooks deferred to Phase 5)
+  if (platform === 'claude-code') {
+    const hasGsdUpdateHook = settings.hooks?.SessionStart?.some(entry =>
+      entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'))
+    );
 
-  if (!hasGsdUpdateHook) {
-    await adapter.registerHook('SessionStart', updateCheckCommand);
-    console.log(`  ${green}✓${reset} Configured update check hook`);
+    if (!hasGsdUpdateHook) {
+      await adapter.registerHook('SessionStart', updateCheckCommand);
+      console.log(`  ${green}✓${reset} Configured update check hook`);
+    }
   }
 
   // Re-read settings.json after adapter modifications to avoid data race
@@ -438,7 +546,7 @@ async function install(isGlobal) {
 /**
  * Apply statusline config, then print completion message
  */
-function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline) {
+function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, platform) {
   if (shouldInstallStatusline) {
     settings.statusLine = {
       type: 'command',
@@ -450,8 +558,10 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   // Always write settings (hooks were already configured in install())
   writeSettings(settingsPath, settings);
 
+  const platformName = platform === 'opencode' ? 'OpenCode' : 'Claude Code';
+  const helpCommand = platform === 'opencode' ? '/gsd:help' : '/gsd:help';
   console.log(`
-  ${green}Done!${reset} Launch Claude Code and run ${cyan}/gsd:help${reset}.
+  ${green}Done!${reset} Launch ${platformName} and run ${cyan}${helpCommand}${reset}.
 `);
 }
 
@@ -512,6 +622,30 @@ function handleStatusline(settings, isInteractive, callback) {
 }
 
 /**
+ * Install for a single platform with statusline handling
+ */
+async function installForPlatform(isGlobal, platform, isInteractive) {
+  const platformLabel = platform === 'opencode' ? 'OpenCode' : 'Claude Code';
+  console.log(`\n  Installing for ${cyan}${platformLabel}${reset}...\n`);
+
+  const { settingsPath, settings, statuslineCommand } = await install(isGlobal, platform);
+
+  // Only handle statusline for Claude Code (OpenCode may not support it)
+  if (platform === 'claude-code') {
+    return new Promise((resolve) => {
+      handleStatusline(settings, isInteractive, (shouldInstallStatusline) => {
+        finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline, platform);
+        resolve();
+      });
+    });
+  } else {
+    // OpenCode: just write config and finish
+    writeSettings(settingsPath, settings);
+    console.log(`\n  ${green}Done!${reset} OpenCode installation complete.\n`);
+  }
+}
+
+/**
  * Prompt for install location
  */
 async function promptLocation() {
@@ -519,10 +653,10 @@ async function promptLocation() {
   // This handles npx execution in environments like WSL2 where stdin may not be properly connected
   if (!process.stdin.isTTY) {
     console.log(`  ${yellow}Non-interactive terminal detected, defaulting to global install${reset}\n`);
-    const { settingsPath, settings, statuslineCommand } = await install(true);
-    handleStatusline(settings, false, (shouldInstallStatusline) => {
-      finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
-    });
+    const selectedPlatforms = await promptPlatformSelection();
+    for (const platform of selectedPlatforms) {
+      await installForPlatform(true, platform, false);
+    }
     return;
   }
 
@@ -539,10 +673,10 @@ async function promptLocation() {
     if (!answered) {
       answered = true;
       console.log(`\n  ${yellow}Input stream closed, defaulting to global install${reset}\n`);
-      const { settingsPath, settings, statuslineCommand } = await install(true);
-      handleStatusline(settings, false, (shouldInstallStatusline) => {
-        finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
-      });
+      const selectedPlatforms = await promptPlatformSelection();
+      for (const platform of selectedPlatforms) {
+        await installForPlatform(true, platform, false);
+      }
     }
   });
 
@@ -561,11 +695,14 @@ async function promptLocation() {
     rl.close();
     const choice = answer.trim() || '1';
     const isGlobal = choice !== '2';
-    const { settingsPath, settings, statuslineCommand } = await install(isGlobal);
-    // Interactive mode - prompt for optional features
-    handleStatusline(settings, true, (shouldInstallStatusline) => {
-      finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
-    });
+
+    // Get platform selection
+    const selectedPlatforms = await promptPlatformSelection();
+
+    // Install for each selected platform
+    for (const platform of selectedPlatforms) {
+      await installForPlatform(isGlobal, platform, true);
+    }
   });
 }
 
@@ -578,17 +715,21 @@ async function promptLocation() {
     console.error(`  ${yellow}Cannot use --config-dir with --local${reset}`);
     process.exit(1);
   } else if (hasGlobal) {
-    const { settingsPath, settings, statuslineCommand } = await install(true);
-    // Non-interactive - respect flags
-    handleStatusline(settings, false, (shouldInstallStatusline) => {
-      finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
-    });
+    // Get platform selection
+    const selectedPlatforms = await promptPlatformSelection();
+
+    // Install for each selected platform
+    for (const platform of selectedPlatforms) {
+      await installForPlatform(true, platform, false);
+    }
   } else if (hasLocal) {
-    const { settingsPath, settings, statuslineCommand } = await install(false);
-    // Non-interactive - respect flags
-    handleStatusline(settings, false, (shouldInstallStatusline) => {
-      finishInstall(settingsPath, settings, statuslineCommand, shouldInstallStatusline);
-    });
+    // Get platform selection
+    const selectedPlatforms = await promptPlatformSelection();
+
+    // Install for each selected platform
+    for (const platform of selectedPlatforms) {
+      await installForPlatform(false, platform, false);
+    }
   } else {
     await promptLocation();
   }
