@@ -68,11 +68,11 @@ Requirements for multi-platform support release. Each maps to roadmap phases.
 
 ### Testing & Validation
 
-- [ ] **TEST-01**: Shared test suite running on both platforms
-- [ ] **TEST-02**: Platform adapter contract tests (interface compliance)
-- [ ] **TEST-03**: Integration tests for installations
-- [ ] **TEST-04**: Regression tests for Claude Code (prevent breaking existing users)
-- [ ] **TEST-05**: Cross-platform workflow validation (same .planning/ on both platforms)
+- [x] **TEST-01**: Shared test suite running on both platforms
+- [x] **TEST-02**: Platform adapter contract tests (interface compliance)
+- [x] **TEST-03**: Integration tests for installations
+- [x] **TEST-04**: Regression tests for Claude Code (prevent breaking existing users)
+- [x] **TEST-05**: Cross-platform workflow validation (same .planning/ on both platforms)
 
 ## v2 Requirements
 
@@ -156,11 +156,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMPAT-03 | Phase 2 | Pending |
 | COMPAT-04 | Phase 2 | Pending |
 | COMPAT-05 | Phase 2 | Pending |
-| TEST-01 | Phase 6 | Pending |
-| TEST-02 | Phase 6 | Pending |
-| TEST-03 | Phase 6 | Pending |
-| TEST-04 | Phase 6 | Pending |
-| TEST-05 | Phase 6 | Pending |
+| TEST-01 | Phase 6 | Complete |
+| TEST-02 | Phase 6 | Complete |
+| TEST-03 | Phase 6 | Complete |
+| TEST-04 | Phase 6 | Complete |
+| TEST-05 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 35 total
@@ -169,4 +169,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-19*
-*Last updated: 2026-01-21 after Phase 5 completion*
+*Last updated: 2026-01-21 after Phase 6 completion*

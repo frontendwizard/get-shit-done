@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: OpenCode Adapter & Multi-Platform Installation** - Add second platform and installer
 - [x] **Phase 4: Agent Spawning Abstraction** - Abstract parallel agent orchestration across platforms
 - [x] **Phase 5: Lifecycle Hooks** - StatusLine and SessionStart abstraction with graceful degradation
-- [ ] **Phase 6: Testing & Validation** - Cross-platform test suite and regression prevention
+- [x] **Phase 6: Testing & Validation** - Cross-platform test suite and regression prevention
 
 ## Phase Details
 
@@ -129,12 +129,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Vitest infrastructure setup
-- [ ] 06-02-PLAN.md — Platform detection, paths, registry unit tests
-- [ ] 06-03-PLAN.md — Adapter contract tests (TEST-02)
-- [ ] 06-04-PLAN.md — Agent runner and install adapter tests
-- [ ] 06-05-PLAN.md — Regression and cross-platform tests (TEST-04, TEST-05)
-- [ ] 06-06-PLAN.md — Final verification checkpoint
+- [x] 06-01-PLAN.md — Vitest infrastructure setup
+- [x] 06-02-PLAN.md — Platform detection, paths, registry unit tests
+- [x] 06-03-PLAN.md — Adapter contract tests (TEST-02)
+- [x] 06-04-PLAN.md — Agent runner and install adapter tests
+- [x] 06-05-PLAN.md — Regression and cross-platform tests (TEST-04, TEST-05)
+- [x] 06-06-PLAN.md — Final verification checkpoint
 
 ## Progress
 
@@ -148,4 +148,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. OpenCode Adapter & Multi-Platform Installation | 5/5 | Complete | 2026-01-21 |
 | 4. Agent Spawning Abstraction | 7/7 | Complete | 2026-01-21 |
 | 5. Lifecycle Hooks | 4/4 | Complete | 2026-01-21 |
-| 6. Testing & Validation | 0/6 | Planning complete | - |
+| 6. Testing & Validation | 6/6 | Complete | 2026-01-21 |
