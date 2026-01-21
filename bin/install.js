@@ -458,11 +458,14 @@ async function install(isGlobal, platform = 'claude-code') {
     }
   }
 
-  // Copy CHANGELOG.md
+  // Copy CHANGELOG.md with path replacement
   const changelogSrc = path.join(src, 'CHANGELOG.md');
   const changelogDest = path.join(claudeDir, 'get-shit-done', 'CHANGELOG.md');
   if (fs.existsSync(changelogSrc)) {
-    fs.copyFileSync(changelogSrc, changelogDest);
+    let content = fs.readFileSync(changelogSrc, 'utf8');
+    // Replace actionable path references (CHANGELOG is historical, so only minimal replacement)
+    content = content.replace(/~\/\.claude\//g, pathPrefix);
+    fs.writeFileSync(changelogDest, content);
     if (verifyFileInstalled(changelogDest, 'CHANGELOG.md')) {
       console.log(`  ${green}✓${reset} Installed CHANGELOG.md`);
     } else {
