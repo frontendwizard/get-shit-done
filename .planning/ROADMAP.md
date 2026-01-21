@@ -112,8 +112,8 @@ Plans:
 
 Plans:
 - [x] 05-01-PLAN.md — Adapter hook registration implementations
-- [ ] 05-02-PLAN.md — Cross-platform install.js integration
-- [ ] 05-03-PLAN.md — Optional hook disable config
+- [x] 05-02-PLAN.md — Cross-platform install.js integration
+- [x] 05-03-PLAN.md — Optional hook disable config
 - [ ] 05-04-PLAN.md — Verification checkpoint
 
 ### Phase 6: Testing & Validation
@@ -142,5 +142,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Claude Code Adapter & Backward Compatibility | 5/5 | Complete | 2026-01-21 |
 | 3. OpenCode Adapter & Multi-Platform Installation | 5/5 | Complete | 2026-01-21 |
 | 4. Agent Spawning Abstraction | 7/7 | Complete | 2026-01-21 |
-| 5. Lifecycle Hooks | 1/4 | In progress | - |
+| 5. Lifecycle Hooks | 3/4 | In progress | - |
 | 6. Testing & Validation | 0/? | Not started | - |

@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 ## Current Position
 
 Phase: 5 of 6 (Lifecycle Hooks)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-21 — Completed 05-02-PLAN.md (Cross-platform install.js integration)
+Last activity: 2026-01-21 — Completed 05-03-PLAN.md (Optional hook disable config)
 
-Progress: [███████████████████████░░] 92% (23/25 total plans across phases)
+Progress: [████████████████████████░] 96% (24/25 total plans across phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
-- Total plans executed: 20 (3 gap closure plans had work already done)
-- Average duration: 2.9 min (excluding already-complete plans)
-- Total execution time: 0.96 hours
+- Total plans completed: 24
+- Total plans executed: 21 (3 gap closure plans had work already done)
+- Average duration: 2.8 min (excluding already-complete plans)
+- Total execution time: 0.98 hours
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [███████████████████████
 | 2 | 5 | 3 | 5.1 min | 1.70 min |
 | 3 | 5 | 3 | 29.0 min | 9.67 min |
 | 4 | 7 | 7 | 15.2 min | 2.17 min |
-| 5 | 2 | 2 | 3.0 min | 1.50 min |
+| 5 | 3 | 3 | 4.0 min | 1.33 min |
 
 **Recent Trend:**
-- Last 5 executed: 04-06 (3 min), 04-07 (3 min), 05-01 (1 min), 05-02 (2 min)
+- Last 5 executed: 04-07 (3 min), 05-01 (1 min), 05-02 (2 min), 05-03 (1 min)
 - Trend: Phase 5 continues with fast capability-based integration
 - Note: Plans 02-03, 02-04, 03-02, and 03-04 were gap closures (some included bug fixes + testing)
 
@@ -158,6 +158,10 @@ Recent decisions affecting current work:
 - INSTALL-02: Use adapter.supportsHooks() instead of platform === 'claude-code' for hook registration
 - INSTALL-03: Use adapter.supportsStatusLine() instead of hardcoded platform checks for statusline config
 
+**From 05-03 execution:**
+- HOOK-07: Default hooks enabled when no gsd.hooks config exists (backward compatible)
+- HOOK-08: User can disable hooks by setting gsd.hooks.enabled: false
+
 ### Pending Todos
 
 **Phase 2 Documentation Cleanup:**
@@ -188,15 +192,17 @@ Recent decisions affecting current work:
 **Phase 5 (Lifecycle Hooks - In Progress):**
 - Plan 05-01 complete: Adapter hook registration methods
 - Plan 05-02 complete: Cross-platform install.js integration
+- Plan 05-03 complete: Optional hook disable config
 - install.js uses adapter.supportsHooks() and adapter.supportsStatusLine()
-- Claude Code: Registers hooks and statusline
+- User can disable hooks via gsd.hooks.enabled: false config
+- Claude Code: Registers hooks and statusline (unless disabled via config)
 - OpenCode: Silently skips hooks and statusline
-- Ready for 05-03: Human verification of cross-platform installation
+- Ready for 05-04: Final verification of cross-platform installation
 
 ## Session Continuity
 
 Last session: 2026-01-21 (plan execution)
-Stopped at: Completed 05-02-PLAN.md (Cross-platform install.js integration)
+Stopped at: Completed 05-03-PLAN.md (Optional hook disable config)
 Resume file: None
 
-Next action: Continue with 05-03-PLAN.md (Human verification of cross-platform installation)
+Next action: Continue with 05-04-PLAN.md (Final verification of cross-platform installation)
