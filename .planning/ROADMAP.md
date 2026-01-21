@@ -67,12 +67,16 @@ Plans:
   1. Installer presents checkbox selection for Claude Code, OpenCode, or both
   2. OpenCode adapter implements platform interface contract
   3. Basic slash commands execute on OpenCode (new-project, status, help)
-  4. OpenCode config file (opencode.jsonc) is created and commands registered
+  4. OpenCode config file (opencode.json) is created and commands registered
   5. Installation verifies commands registered successfully on selected platforms
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] TBD during plan-phase
+- [ ] 03-01-PLAN.md — Dependencies and OpenCodePaths fix
+- [ ] 03-02-PLAN.md — OpenCodeAdapter implementation
+- [ ] 03-03-PLAN.md — Multi-platform install-adapter
+- [ ] 03-04-PLAN.md — Multi-platform installer TUI
+- [ ] 03-05-PLAN.md — Verification checkpoint
 
 ### Phase 4: Agent Spawning Abstraction
 **Goal**: GSD workflows can spawn parallel agents (4-7 simultaneously) on both platforms transparently
@@ -127,7 +131,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Platform Abstraction Foundation | 5/5 | Complete | 2026-01-20 |
 | 2. Claude Code Adapter & Backward Compatibility | 5/5 | Complete | 2026-01-21 |
-| 3. OpenCode Adapter & Multi-Platform Installation | 0/? | Not started | - |
+| 3. OpenCode Adapter & Multi-Platform Installation | 0/5 | Not started | - |
 | 4. Agent Spawning Abstraction | 0/? | Not started | - |
 | 5. Lifecycle Hooks | 0/? | Not started | - |
 | 6. Testing & Validation | 0/? | Not started | - |
