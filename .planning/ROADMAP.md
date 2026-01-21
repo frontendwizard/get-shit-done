@@ -84,18 +84,20 @@ Plans:
 **Requirements**: AGENT-01, AGENT-02, AGENT-03, AGENT-04, AGENT-05, CMD-01, CMD-02
 **Success Criteria** (what must be TRUE):
   1. new-project workflow spawns 4 researcher agents + 1 synthesizer on Claude Code
-  2. new-project workflow spawns 4 researcher agents + 1 synthesizer on OpenCode
+  2. TypeScript infrastructure supports agent spawning on OpenCode (workflow integration pending OpenCode Task() equivalent)
   3. Agent spawn failures are detected with clear error messages (no silent failures)
   4. Agent completion is verified and output collected from .planning/ files
-  5. All 24 commands work on both platforms with correct argument passing
-**Plans**: 5 plans
+  5. 15 of 24 commands work on both platforms; 9 commands require Claude Code's Task tool for multi-agent functionality
+**Plans**: 7 plans (5 original + 2 gap closure)
 
 Plans:
-- [ ] 04-01-PLAN.md — AgentInstance implementations for both platforms
-- [ ] 04-02-PLAN.md — Claude Code spawnAgent() implementation
-- [ ] 04-03-PLAN.md — OpenCode spawnAgent() with process spawning
-- [ ] 04-04-PLAN.md — Parallel agent execution helper
-- [ ] 04-05-PLAN.md — Integration testing and verification
+- [x] 04-01-PLAN.md — AgentInstance implementations for both platforms
+- [x] 04-02-PLAN.md — Claude Code spawnAgent() implementation
+- [x] 04-03-PLAN.md — OpenCode spawnAgent() with process spawning
+- [x] 04-04-PLAN.md — Parallel agent execution helper
+- [x] 04-05-PLAN.md — Integration testing and verification
+- [ ] 04-06-PLAN.md — [GAP CLOSURE] Platform compatibility documentation
+- [ ] 04-07-PLAN.md — [GAP CLOSURE] Update requirements and roadmap accuracy
 
 ### Phase 5: Lifecycle Hooks
 **Goal**: StatusLine and SessionStart equivalents work (or gracefully degrade) on both platforms
@@ -135,7 +137,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Platform Abstraction Foundation | 5/5 | Complete | 2026-01-20 |
 | 2. Claude Code Adapter & Backward Compatibility | 5/5 | Complete | 2026-01-21 |
-| 3. OpenCode Adapter & Multi-Platform Installation | 0/5 | Not started | - |
-| 4. Agent Spawning Abstraction | 0/? | Not started | - |
+| 3. OpenCode Adapter & Multi-Platform Installation | 5/5 | Complete | 2026-01-21 |
+| 4. Agent Spawning Abstraction | 5/7 | Gap closure | 2026-01-21 |
 | 5. Lifecycle Hooks | 0/? | Not started | - |
 | 6. Testing & Validation | 0/? | Not started | - |
