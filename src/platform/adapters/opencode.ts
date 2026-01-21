@@ -12,9 +12,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { parse } from 'jsonc-parser';
+import { spawn } from 'child_process';
 import { PlatformAdapter, AgentInstance, HookType } from '../adapter';
 import { OpenCodePaths } from '../paths';
 import { PlatformType } from '../types';
+import { OpenCodeAgentInstance } from './opencode-agent';
 
 export class OpenCodeAdapter implements PlatformAdapter {
   readonly name: PlatformType = 'opencode';
@@ -147,6 +149,46 @@ export class OpenCodeAdapter implements PlatformAdapter {
   }
 
   async spawnAgent(agentPath: string, args?: Record<string, string>): Promise<AgentInstance> {
-    throw new Error('spawnAgent() not implemented in Phase 3 - deferred to Phase 4 (Agent Spawning)');
+    // Validate agent file exists
+    if (!fs.existsSync(agentPath)) {
+      throw new Error(`Agent file not found: ${agentPath}`);
+    }
+
+    // Extract agent name from path
+    // Example: /path/to/gsd-project-researcher.md -> gsd-project-researcher
+    const agentName = path.basename(agentPath, '.md');
+
+    // Construct prompt from args
+    const prompt = this.constructPrompt(args);
+
+    // Generate unique agent ID
+    const agentId = `${agentName}-${Date.now()}`;
+
+    // Spawn opencode CLI process with --agent flag
+    // Based on research: use array arguments (NOT shell: true) to prevent injection
+    const child = spawn('opencode', [
+      '--agent', agentName,
+      '--non-interactive',  // Prevent TUI from launching
+      prompt
+    ], {
+      cwd: process.cwd(),
+      stdio: ['ignore', 'pipe', 'pipe']  // stdin ignored, capture stdout/stderr
+    });
+
+    // Create AgentInstance wrapping the process
+    const instance = new OpenCodeAgentInstance(child, agentId);
+
+    return instance;
+  }
+
+  private constructPrompt(args?: Record<string, string>): string {
+    if (!args || Object.keys(args).length === 0) {
+      return '';
+    }
+
+    // Format args as key: value pairs
+    return Object.entries(args)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n');
   }
 }
