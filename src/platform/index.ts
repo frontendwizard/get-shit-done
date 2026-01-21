@@ -24,3 +24,7 @@ export { getInstallPaths, InstallPaths } from './install-adapter';
 // Platform adapters
 export { ClaudeCodeAdapter } from './adapters/claude-code';
 export { OpenCodeAdapter } from './adapters/opencode';
+
+// Agent instance implementations
+export { ClaudeCodeAgentInstance } from './adapters/claude-code-agent';
+export { OpenCodeAgentInstance } from './adapters/opencode-agent';
