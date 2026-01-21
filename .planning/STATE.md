@@ -10,19 +10,19 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 ## Current Position
 
 Phase: 6 of 6 (Testing & Validation)
-Plan: 4 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In progress
-Last activity: 2026-01-21 — Completed 06-03-PLAN.md (Adapter contract tests)
+Last activity: 2026-01-21 — Completed 06-05-PLAN.md (Integration tests)
 
-Progress: [████████████████████████████░░] 90% (28/31 total plans across phases)
+Progress: [█████████████████████████████░] 94% (29/31 total plans across phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28
-- Total plans executed: 24 (4 plans were verification-only or gap closures)
+- Total plans completed: 29
+- Total plans executed: 25 (4 plans were verification-only or gap closures)
 - Average duration: 2.8 min (excluding verification-only plans)
-- Total execution time: 1.15 hours
+- Total execution time: 1.2 hours
 
 **By Phase:**
 
@@ -33,12 +33,12 @@ Progress: [███████████████████████
 | 3 | 5 | 3 | 29.0 min | 9.67 min |
 | 4 | 7 | 7 | 15.2 min | 2.17 min |
 | 5 | 4 | 3 | 6.0 min | 2.00 min |
-| 6 | 4 | 4 | 13.0 min | 3.25 min |
+| 6 | 5 | 5 | 18.0 min | 3.60 min |
 
 **Recent Trend:**
-- Last 5 executed: 06-01 (3 min), 06-02 (3 min), 06-03 (4 min), 06-04 (3 min)
-- Trend: Phase 6 testing authoring in progress
-- Note: Plan 06-03 added 84 adapter contract tests (149 total tests now)
+- Last 5 executed: 06-02 (3 min), 06-03 (4 min), 06-04 (3 min), 06-05 (5 min)
+- Trend: Phase 6 testing infrastructure nearly complete
+- Note: Plan 06-05 added 27 regression/integration tests (176 total tests now)
 
 *Updated after each plan completion*
 
@@ -184,6 +184,10 @@ Recent decisions affecting current work:
 - TEST-06: Use mock adapter factory for PlatformAdapter testing (avoids real adapter initialization)
 - TEST-07: Mock AgentInstance with configurable success/failure for edge case testing
 
+**From 06-05 execution:**
+- TEST-08: Use memfs mocking pattern from contract tests for regression tests
+- TEST-09: Fixture files must contain no platform-specific paths for portability validation
+
 ### Pending Todos
 
 **Phase 2 Documentation Cleanup:**
@@ -229,13 +233,14 @@ Recent decisions affecting current work:
 - Plan 06-02 complete: Platform detection, paths, and registry unit tests (49 tests)
 - Plan 06-03 complete: Adapter contract tests (84 tests across both adapters)
 - Plan 06-04 complete: Agent runner and install adapter unit tests (16 tests)
-- 149 total tests passing (65 unit + 84 contract)
-- Testing infrastructure ready for integration/E2E tests
+- Plan 06-05 complete: Regression tests and cross-platform portability tests (27 tests)
+- 176 total tests passing (65 unit + 84 contract + 27 regression/integration)
+- Ready for 06-06 (E2E tests)
 
 ## Session Continuity
 
 Last session: 2026-01-21 (plan execution)
-Stopped at: Completed 06-03-PLAN.md (Adapter contract tests)
+Stopped at: Completed 06-05-PLAN.md (Integration tests)
 Resume file: None
 
-Next action: Continue with 06-05 (Integration tests) or 06-06 (E2E tests)
+Next action: Continue with 06-06 (E2E tests)
