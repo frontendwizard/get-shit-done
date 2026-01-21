@@ -33,12 +33,12 @@ Progress: [███████████████████████
 | 3 | 5 | 3 | 29.0 min | 9.67 min |
 | 4 | 7 | 7 | 15.2 min | 2.17 min |
 | 5 | 4 | 3 | 6.0 min | 2.00 min |
-| 6 | 2 | 2 | 6.0 min | 3.00 min |
+| 6 | 3 | 3 | 9.0 min | 3.00 min |
 
 **Recent Trend:**
-- Last 5 executed: 05-03 (1 min), 05-04 (2 min), 06-01 (3 min), 06-04 (3 min)
+- Last 5 executed: 05-04 (2 min), 06-01 (3 min), 06-02 (3 min), 06-04 (3 min)
 - Trend: Phase 6 testing authoring in progress
-- Note: Plan 06-04 added 16 unit tests for agent runner and install adapter
+- Note: Plan 06-02 added 49 unit tests for platform detection, paths, and registry
 
 *Updated after each plan completion*
 
@@ -171,9 +171,13 @@ Recent decisions affecting current work:
 - TEST-02: memfs for filesystem mocking (zero disk I/O in tests)
 - TEST-03: V8 coverage provider (faster than istanbul)
 
+**From 06-02 execution:**
+- TEST-04: Use vi.mock() factory instead of manual mocks for fs module (better control over mock behavior per test)
+- TEST-05: Path tests don't need fs mocking (only env vars tested, no filesystem calls)
+
 **From 06-04 execution:**
-- TEST-04: Use mock adapter factory for PlatformAdapter testing (avoids real adapter initialization)
-- TEST-05: Mock AgentInstance with configurable success/failure for edge case testing
+- TEST-06: Use mock adapter factory for PlatformAdapter testing (avoids real adapter initialization)
+- TEST-07: Mock AgentInstance with configurable success/failure for edge case testing
 
 ### Pending Todos
 
@@ -217,8 +221,9 @@ Recent decisions affecting current work:
 
 **Phase 6 (Testing & Validation - In Progress):**
 - Plan 06-01 complete: Vitest + memfs testing infrastructure
+- Plan 06-02 complete: Platform detection, paths, and registry unit tests (49 tests)
 - Plan 06-04 complete: Agent runner and install adapter unit tests
-- 65 platform unit tests passing
+- 106 platform unit tests passing
 - Testing infrastructure ready for integration/E2E tests
 
 ## Session Continuity
