@@ -20,7 +20,11 @@
     "build:hooks": "node scripts/build-hooks.js",
     "watch": "tsc --watch",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run build:hooks"
+    "prepublishOnly": "npm run build:hooks",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
   },
   "keywords": [
     "claude",
