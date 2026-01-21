@@ -139,6 +139,19 @@ function writeSettings(settingsPath, settings) {
 }
 
 /**
+ * Create backup of settings.json before modification
+ * Backup is overwritten on each install (single recovery point)
+ */
+function backupSettings(settingsPath) {
+  if (fs.existsSync(settingsPath)) {
+    const backupPath = settingsPath + '.backup';
+    fs.copyFileSync(settingsPath, backupPath);
+    return backupPath;
+  }
+  return null;
+}
+
+/**
  * Recursively copy directory, replacing paths in .md files
  * Deletes existing destDir first to remove orphaned files from previous versions
  */
@@ -390,6 +403,13 @@ async function install(isGlobal) {
 
   // Configure statusline and hooks in settings.json
   const settingsPath = path.join(claudeDir, 'settings.json');
+
+  // Backup existing settings before any modifications (INST-05)
+  const backupPath = backupSettings(settingsPath);
+  if (backupPath) {
+    console.log(`  ${green}✓${reset} Backed up settings.json`);
+  }
+
   const settings = cleanupOrphanedHooks(readSettings(settingsPath));
   const statuslineCommand = isGlobal
     ? buildHookCommand(claudeDir, 'gsd-statusline.js')
@@ -408,7 +428,11 @@ async function install(isGlobal) {
     console.log(`  ${green}✓${reset} Configured update check hook`);
   }
 
-  return { settingsPath, settings, statuslineCommand };
+  // Re-read settings.json after adapter modifications to avoid data race
+  // (adapter.registerHook() writes to disk, we need the updated state)
+  const freshSettings = readSettings(settingsPath);
+
+  return { settingsPath, settings: freshSettings, statuslineCommand };
 }
 
 /**
