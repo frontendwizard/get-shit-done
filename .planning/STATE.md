@@ -97,6 +97,11 @@ Recent decisions affecting current work:
 - DEPS-01: Added @inquirer/checkbox and jsonc-parser as runtime dependencies (not devDependencies)
 - PATH-01: Corrected OpenCodePaths to use /command/gsd/ (singular with namespacing) instead of /commands/ (plural)
 
+
+**From 03-02 execution:**
+- OC-01: OpenCode adapter reads both .json and .jsonc config extensions (prefers .json if both exist)
+- OC-02: OpenCode adapter writes only .json format (GSD-generated config does not need comments)
+- OC-03: All OpenCode capabilities return false in Phase 3 (parallel agents, hooks, status line TBD in Phase 4/5)
 **From 03-03 execution:**
 - PLAT-12: getInstallPaths() accepts optional platform parameter with claude-code default (backward compatible)
 - PLAT-13: Local installs use platform-specific local directory (.claude vs .opencode)
