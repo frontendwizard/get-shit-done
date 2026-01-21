@@ -122,8 +122,9 @@ export class OpenCodeAdapter implements PlatformAdapter {
   // =========================================================================
 
   supportsParallelAgents(): boolean {
-    // To be determined in Phase 4 (Agent Spawning)
-    return false;
+    // Phase 4: OpenCode supports parallel agents via child_process.spawn()
+    // Can spawn multiple opencode CLI processes simultaneously
+    return true;
   }
 
   supportsStatusLine(): boolean {
