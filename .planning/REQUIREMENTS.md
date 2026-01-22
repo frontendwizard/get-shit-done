@@ -9,9 +9,9 @@ Requirements for v2.1 milestone. Each maps to roadmap phases.
 
 ### Architecture Documentation
 
-- [ ] **ARCH-01**: Design pattern explanation covering adapter pattern, registry, and detection flow
-- [ ] **ARCH-02**: Mermaid diagrams visualizing component relationships and data flow
-- [ ] **ARCH-03**: Decision rationale explaining why this architecture was chosen
+- [x] **ARCH-01**: Design pattern explanation covering adapter pattern, registry, and detection flow
+- [x] **ARCH-02**: Mermaid diagrams visualizing component relationships and data flow
+- [x] **ARCH-03**: Decision rationale explaining why this architecture was chosen
 
 ### Tutorial/Guide
 
