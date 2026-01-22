@@ -9,12 +9,20 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 9 - Foundation
 Plan: —
-Status: Defining requirements for v2.2
-Last activity: 2026-01-22 — Milestone v2.2 started
+Status: Ready for planning
+Last activity: 2026-01-22 — Roadmap created for v2.2
 
 Progress: [░░░░░░░░░░] 0%
+
+## v2.2 Overview
+
+| Phase | Goal | Requirements | Status |
+|-------|------|--------------|--------|
+| 9 | Shared infrastructure | DEDUP-01, DEDUP-02, DEDUP-03 | Ready |
+| 10 | PlatformInstaller interface | INTF-01, INTF-02, INTF-03 | Blocked by 9 |
+| 11 | Install script refactor | INST-01, INST-02, INST-03, INST-04 | Blocked by 10 |
 
 ## Performance Metrics
 
@@ -68,7 +76,7 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Milestone v2.1 archived and shipped
+Stopped at: Roadmap created for v2.2
 Resume file: None
 
-Next action: `/gsd:new-milestone` to define next milestone
+Next action: `/gsd:plan-phase 9` to plan Foundation phase

@@ -38,22 +38,22 @@ Requirements for this refactoring milestone. Each maps to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INTF-01 | TBD | Pending |
-| INTF-02 | TBD | Pending |
-| INTF-03 | TBD | Pending |
-| DEDUP-01 | TBD | Pending |
-| DEDUP-02 | TBD | Pending |
-| DEDUP-03 | TBD | Pending |
-| INST-01 | TBD | Pending |
-| INST-02 | TBD | Pending |
-| INST-03 | TBD | Pending |
-| INST-04 | TBD | Pending |
+| INTF-01 | Phase 10 | Pending |
+| INTF-02 | Phase 10 | Pending |
+| INTF-03 | Phase 10 | Pending |
+| DEDUP-01 | Phase 9 | Pending |
+| DEDUP-02 | Phase 9 | Pending |
+| DEDUP-03 | Phase 9 | Pending |
+| INST-01 | Phase 11 | Pending |
+| INST-02 | Phase 11 | Pending |
+| INST-03 | Phase 11 | Pending |
+| INST-04 | Phase 11 | Pending |
 
 **Coverage:**
 - v2.2 requirements: 10 total
-- Mapped to phases: 0
-- Unmapped: 10 ⚠️
+- Mapped to phases: 10 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-22 after initial definition*
+*Last updated: 2026-01-22 after roadmap creation*
