@@ -301,17 +301,18 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix) {
 /**
  * Copy commands for OpenCode platform
  * 
- * Flattens nested command directory and renames files:
+ * Copies commands as flat files with gsd- prefix:
  * - commands/gsd/help.md -> command/gsd-help.md
  * - commands/gsd/plan-phase.md -> command/gsd-plan-phase.md
  * 
- * Also transforms frontmatter to remove Claude Code-specific fields.
- * Clears existing gsd-*.md files before copying to remove orphans.
+ * OpenCode command names derive from filename:
+ * - command/gsd-help.md becomes /gsd-help
  * 
- * Returns array of command info for config registration.
+ * Also transforms frontmatter to remove Claude Code-specific fields.
+ * Clears existing gsd-*.md files and gsd/ directory before copying.
  */
 function copyCommandsForOpenCode(srcDir, destDir, pathPrefix) {
-  // Remove old GSD commands (gsd-*.md) before copying new ones
+  // Clean install: remove existing gsd-*.md files
   if (fs.existsSync(destDir)) {
     for (const file of fs.readdirSync(destDir)) {
       if (file.startsWith('gsd-') && file.endsWith('.md')) {
@@ -319,17 +320,23 @@ function copyCommandsForOpenCode(srcDir, destDir, pathPrefix) {
       }
     }
   }
+  
+  // Also clean up old gsd/ subdirectory from previous versions
+  const gsdSubDir = path.join(destDir, 'gsd');
+  if (fs.existsSync(gsdSubDir)) {
+    fs.rmSync(gsdSubDir, { recursive: true });
+  }
+  
+  fs.mkdirSync(destDir, { recursive: true });
 
   const entries = fs.readdirSync(srcDir, { withFileTypes: true });
-  const commands = [];
+  let commandCount = 0;
 
   for (const entry of entries) {
     if (entry.isFile() && entry.name.endsWith('.md')) {
-      // Rename: help.md -> gsd-help.md
-      const baseName = entry.name.replace('.md', '');
-      const newName = `gsd-${entry.name}`;
       const srcPath = path.join(srcDir, entry.name);
-      const destPath = path.join(destDir, newName);
+      // Prefix filename with gsd- (help.md -> gsd-help.md)
+      const destPath = path.join(destDir, `gsd-${entry.name}`);
 
       let content = fs.readFileSync(srcPath, 'utf8');
       // Replace path references
@@ -338,113 +345,11 @@ function copyCommandsForOpenCode(srcDir, destDir, pathPrefix) {
       content = transformCommandForOpenCode(content);
 
       fs.writeFileSync(destPath, content);
-      
-      // Collect command info for config registration
-      commands.push({
-        name: baseName,                    // e.g., "help", "plan-phase"
-        configKey: `gsd:${baseName}`,      // e.g., "gsd:help", "gsd:plan-phase"
-        filePath: `gsd-${entry.name}`,     // e.g., "gsd-help.md"
-      });
+      commandCount++;
     }
   }
   
-  return commands;
-}
-
-/**
- * Read OpenCode config file (checks multiple possible locations)
- * Returns { config, configPath } where configPath is the file that exists
- */
-function readOpenCodeConfig(configDir) {
-  const { parse } = require('jsonc-parser');
-  
-  // Check for config files in order of preference
-  const candidates = [
-    path.join(configDir, 'opencode.json'),
-    path.join(configDir, 'opencode.jsonc'),
-    path.join(configDir, 'config.json'),
-  ];
-  
-  for (const configPath of candidates) {
-    if (fs.existsSync(configPath)) {
-      try {
-        const content = fs.readFileSync(configPath, 'utf8');
-        return { config: parse(content), configPath };
-      } catch (e) {
-        // If parsing fails, continue to next candidate
-      }
-    }
-  }
-  
-  // No config file found - will create opencode.json
-  return { config: {}, configPath: path.join(configDir, 'opencode.json') };
-}
-
-/**
- * Register GSD commands in OpenCode's config file
- * 
- * This enables /gsd:command-name syntax instead of /gsd-command-name
- * Commands are registered with template pointing to the md file.
- * 
- * OpenCode config supports:
- *   "command": {
- *     "gsd:help": { "template": "..." }
- *   }
- */
-function registerOpenCodeCommands(configDir, commands, commandsDir) {
-  const { config, configPath } = readOpenCodeConfig(configDir);
-  
-  // Initialize command section if not present
-  if (!config.command) {
-    config.command = {};
-  }
-  
-  // Remove old gsd: commands (clean install)
-  for (const key of Object.keys(config.command)) {
-    if (key.startsWith('gsd:') || key.startsWith('gsd-')) {
-      delete config.command[key];
-    }
-  }
-  
-  // Register each command with template pointing to the md file
-  // OpenCode will load the template from the file
-  for (const cmd of commands) {
-    // Read the md file to extract description and template
-    const mdPath = path.join(commandsDir, cmd.filePath);
-    if (fs.existsSync(mdPath)) {
-      const content = fs.readFileSync(mdPath, 'utf8');
-      
-      // Parse frontmatter for description
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-      let description = '';
-      let agent = '';
-      
-      if (frontmatterMatch) {
-        const frontmatter = frontmatterMatch[1];
-        const descMatch = frontmatter.match(/^description:\s*(.+)$/m);
-        const agentMatch = frontmatter.match(/^agent:\s*(.+)$/m);
-        if (descMatch) description = descMatch[1].trim();
-        if (agentMatch) agent = agentMatch[1].trim();
-      }
-      
-      // Get template (everything after frontmatter)
-      const template = frontmatterMatch 
-        ? content.slice(frontmatterMatch[0].length).trim()
-        : content.trim();
-      
-      // Register command with gsd: prefix
-      config.command[cmd.configKey] = {
-        template,
-        ...(description && { description }),
-        ...(agent && { agent }),
-      };
-    }
-  }
-  
-  // Write config back (preserves other settings)
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
-  
-  return { commandCount: commands.length, configPath };
+  return commandCount;
 }
 
 /**
@@ -467,13 +372,62 @@ function cleanupOrphanedFiles(claudeDir, platform) {
     }
   }
 
-  // OpenCode-specific: remove old nested command/gsd/ directory
-  // (commands now live at command/gsd-*.md root level)
+  // OpenCode-specific: remove old gsd/ subdirectory from previous versions
+  // (commands now use flat gsd-*.md files for simplicity)
   if (platform === 'opencode') {
-    const oldGsdDir = path.join(claudeDir, 'command', 'gsd');
-    if (fs.existsSync(oldGsdDir)) {
-      fs.rmSync(oldGsdDir, { recursive: true });
-      console.log(`  ${green}✓${reset} Removed orphaned command/gsd/ directory`);
+    const commandDir = path.join(claudeDir, 'command');
+    if (fs.existsSync(commandDir)) {
+      // Remove gsd/ subdirectory if it exists
+      const gsdSubDir = path.join(commandDir, 'gsd');
+      if (fs.existsSync(gsdSubDir)) {
+        fs.rmSync(gsdSubDir, { recursive: true });
+        console.log(`  ${green}✓${reset} Removed orphaned command/gsd/ directory`);
+      }
+    }
+    
+    // Also clean up gsd commands from config.json (from previous versions that hardcoded them)
+    cleanupOpenCodeConfigCommands(claudeDir);
+  }
+}
+
+/**
+ * Remove GSD commands from OpenCode config.json
+ * Previous versions registered commands in config - now we use directory namespacing
+ */
+function cleanupOpenCodeConfigCommands(configDir) {
+  const { parse } = require('jsonc-parser');
+  
+  // Check for config files
+  const candidates = [
+    path.join(configDir, 'opencode.json'),
+    path.join(configDir, 'opencode.jsonc'),
+    path.join(configDir, 'config.json'),
+  ];
+  
+  for (const configPath of candidates) {
+    if (fs.existsSync(configPath)) {
+      try {
+        const content = fs.readFileSync(configPath, 'utf8');
+        const config = parse(content);
+        
+        if (config.command) {
+          let cleaned = false;
+          for (const key of Object.keys(config.command)) {
+            if (key.startsWith('gsd:') || key.startsWith('gsd-')) {
+              delete config.command[key];
+              cleaned = true;
+            }
+          }
+          
+          if (cleaned) {
+            fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+            console.log(`  ${green}✓${reset} Removed gsd commands from ${path.basename(configPath)}`);
+          }
+        }
+        return; // Only process first found config
+      } catch (e) {
+        // If parsing fails, continue to next candidate
+      }
     }
   }
 }
@@ -647,11 +601,28 @@ function transformCommandForOpenCode(content) {
   const modelMatch = frontmatter.match(/^model:\s*(.+)$/m);
   const subtaskMatch = frontmatter.match(/^subtask:\s*(.+)$/m);
 
+  // Helper to quote YAML values containing colons (prevents OpenCode's preprocessor
+  // from converting to block scalar, which adds trailing newline)
+  const quoteIfNeeded = (value) => {
+    const trimmed = value.trim();
+    // Already quoted
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+      return trimmed;
+    }
+    // Contains colon - quote it
+    if (trimmed.includes(':')) {
+      // Escape any double quotes in the value
+      return `"${trimmed.replace(/"/g, '\\"')}"`;
+    }
+    return trimmed;
+  };
+
   // Build new frontmatter with only valid OpenCode fields
   let newFrontmatter = '---';
   
   if (descMatch) {
-    newFrontmatter += `\ndescription: ${descMatch[1].trim()}`;
+    newFrontmatter += `\ndescription: ${quoteIfNeeded(descMatch[1])}`;
   }
   if (agentMatch) {
     newFrontmatter += `\nagent: ${agentMatch[1].trim()}`;
@@ -732,32 +703,31 @@ async function install(isGlobal, platform = 'claude-code') {
   fs.mkdirSync(commandsDir, { recursive: true });
   const gsdSrc = path.join(src, 'commands', 'gsd');
   
-  let commandList = [];
+  let commandCount = 0;
   if (platform === 'opencode') {
-    // OpenCode: flatten commands to root level with gsd- prefix
-    // e.g., commands/gsd/help.md -> command/gsd-help.md
-    // Returns list of commands for config registration
-    commandList = copyCommandsForOpenCode(gsdSrc, commandsDir, pathPrefix);
+    // OpenCode: copy commands to gsd/ subdirectory for namespacing
+    // e.g., commands/gsd/help.md -> command/gsd/help.md -> /gsd:help
+    commandCount = copyCommandsForOpenCode(gsdSrc, commandsDir, pathPrefix);
   } else {
     // Claude Code: keep nested structure (commands/gsd/)
     copyWithPathReplacement(gsdSrc, commandsDir, pathPrefix);
   }
   
-  if (verifyInstalled(commandsDir, 'commands')) {
-    console.log(`  ${green}✓${reset} Installed commands`);
+  // Verify commands directory for OpenCode (check for gsd-*.md files)
+  if (platform === 'opencode') {
+    const gsdFiles = fs.readdirSync(commandsDir).filter(f => f.startsWith('gsd-') && f.endsWith('.md'));
+    if (gsdFiles.length > 0) {
+      console.log(`  ${green}✓${reset} Installed ${commandCount} commands (as /gsd-*)`);
+    } else {
+      console.log(`  ${yellow}✗${reset} Failed to install commands: no gsd-*.md files found`);
+      failures.push('commands');
+    }
   } else {
-    failures.push('commands');
-  }
-  
-  // OpenCode: Register commands in config for /gsd:command-name syntax
-  if (platform === 'opencode' && commandList.length > 0) {
-    try {
-      const { commandCount, configPath } = registerOpenCodeCommands(claudeDir, commandList, commandsDir);
-      const configName = path.basename(configPath);
-      console.log(`  ${green}✓${reset} Registered ${commandCount} commands in ${configName} (as /gsd:*)`);
-    } catch (e) {
-      console.log(`  ${yellow}⚠${reset} Could not register commands in config: ${e.message}`);
-      console.log(`    ${dim}Commands still available as /gsd-* from md files${reset}`);
+    // Claude Code: keep nested structure (commands/gsd/)
+    if (verifyInstalled(commandsDir, 'commands')) {
+      console.log(`  ${green}✓${reset} Installed commands`);
+    } else {
+      failures.push('commands');
     }
   }
 
