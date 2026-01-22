@@ -57,20 +57,24 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ARCH-01 | Phase 7 | Pending |
-| ARCH-02 | Phase 7 | Pending |
-| ARCH-03 | Phase 7 | Pending |
-| GUIDE-01 | Phase 8 | Pending |
-| GUIDE-02 | Phase 8 | Pending |
-| GUIDE-03 | Phase 8 | Pending |
-| GUIDE-04 | Phase 8 | Pending |
-| INTEG-01 | Phase 8 | Pending |
+| ARCH-01 | Phase 7: Architecture Documentation | Pending |
+| ARCH-02 | Phase 7: Architecture Documentation | Pending |
+| ARCH-03 | Phase 7: Architecture Documentation | Pending |
+| GUIDE-01 | Phase 8: Adapter Creation Guide | Pending |
+| GUIDE-02 | Phase 8: Adapter Creation Guide | Pending |
+| GUIDE-03 | Phase 8: Adapter Creation Guide | Pending |
+| GUIDE-04 | Phase 8: Adapter Creation Guide | Pending |
+| INTEG-01 | Phase 8: Adapter Creation Guide | Pending |
 
 **Coverage:**
 - v1 requirements: 8 total
-- Mapped to phases: 8
-- Unmapped: 0 ✓
+- Mapped to phases: 8/8 ✓
+- Unmapped: 0
+
+**Phase Mapping:**
+- Phase 7 (Architecture Documentation): 3 requirements (ARCH-01, ARCH-02, ARCH-03)
+- Phase 8 (Adapter Creation Guide): 5 requirements (GUIDE-01, GUIDE-02, GUIDE-03, GUIDE-04, INTEG-01)
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-22 after initial definition*
+*Last updated: 2026-01-22 after roadmap creation*
