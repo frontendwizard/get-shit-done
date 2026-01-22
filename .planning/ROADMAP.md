@@ -58,10 +58,10 @@ Plans:
   3. Testing section shows how to run contract tests and write platform-specific tests
   4. Pre-PR checklist allows self-verification before submitting
   5. Links exist from main docs and PLATFORM-SUPPORT.md to new platform docs
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 08-01: TBD (determined during plan-phase)
+- [ ] 08-01-PLAN.md — Create adapter creation tutorial with checklists and integration links
 
 ## Progress
 
@@ -72,7 +72,7 @@ Phases execute in numeric order: 7 → 7.1 (if inserted) → 8
 |-------|-----------|----------------|--------|-----------|
 | 1-6 | v2.0 | 32/32 | Complete | 2026-01-22 |
 | 7. Architecture Documentation | v2.1 | 1/1 | Complete | 2026-01-22 |
-| 8. Adapter Creation Guide | v2.1 | 0/TBD | Not started | - |
+| 8. Adapter Creation Guide | v2.1 | 0/1 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-22*
