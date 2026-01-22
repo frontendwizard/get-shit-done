@@ -8,6 +8,16 @@ A platform-agnostic workflow orchestration system for AI-assisted software devel
 
 Platform independence - users choose AI platforms based on project needs, not tooling limitations. GSD workflow remains consistent regardless of which platform executes it.
 
+## Current Milestone: v2.1 Platform Documentation
+
+**Goal:** Comprehensive documentation for contributors on how the multi-platform system works and how to create new platform adapters.
+
+**Target features:**
+- Architecture documentation (adapter pattern, registry, platform interface)
+- Step-by-step adapter creation guide
+- Testing guide for platform implementations
+- Extension of existing docs/ structure
+
 ## Current State (v2.0)
 
 **Shipped:** 2026-01-22
@@ -38,7 +48,9 @@ Multi-platform support for Claude Code and OpenCode with:
 
 ### Active
 
-(None — milestone complete. Define in next milestone via `/gsd:new-milestone`)
+- [ ] Platform architecture documentation
+- [ ] Adapter creation guide
+- [ ] Platform testing documentation
 
 ### Out of Scope
 
@@ -82,4 +94,4 @@ Multi-platform support for Claude Code and OpenCode with:
 - OpenCode hook support pending platform feature
 
 ---
-*Last updated: 2026-01-22 after v2.0 milestone*
+*Last updated: 2026-01-22 after v2.1 milestone start*
