@@ -8,15 +8,9 @@ A platform-agnostic workflow orchestration system for AI-assisted software devel
 
 Platform independence - users choose AI platforms based on project needs, not tooling limitations. GSD workflow remains consistent regardless of which platform executes it.
 
-## Current Milestone: v2.1 Platform Documentation
+## Current Milestone: (None Active)
 
-**Goal:** Comprehensive documentation for contributors on how the multi-platform system works and how to create new platform adapters.
-
-**Target features:**
-- Architecture documentation (adapter pattern, registry, platform interface)
-- Step-by-step adapter creation guide
-- Testing guide for platform implementations
-- Extension of existing docs/ structure
+Previous milestone v2.1 Platform Documentation shipped 2026-01-22. Use `/gsd:new-milestone` to start the next milestone.
 
 ## Current State (v2.0)
 
@@ -45,12 +39,13 @@ Multi-platform support for Claude Code and OpenCode with:
 - ✓ Project portability (PORT-01 through PORT-04) — v2.0
 - ✓ Backward compatibility (COMPAT-01 through COMPAT-05) — v2.0
 - ✓ Test suite (TEST-01 through TEST-05) — v2.0
+- ✓ Platform architecture documentation (ARCH-01 through ARCH-03) — v2.1
+- ✓ Adapter creation guide (GUIDE-01 through GUIDE-04) — v2.1
+- ✓ Documentation integration (INTEG-01) — v2.1
 
 ### Active
 
-- [ ] Platform architecture documentation
-- [ ] Adapter creation guide
-- [ ] Platform testing documentation
+(None - no active milestone)
 
 ### Out of Scope
 

@@ -1,9 +1,9 @@
-# Roadmap: GSD Platform Documentation
+# Roadmap: Multi-Platform GSD
 
 ## Milestones
 
 - ✅ **v2.0 Multi-Platform** - Phases 1-6 (shipped 2026-01-22)
-- 🚧 **v2.1 Platform Documentation** - Phases 7-8 (in progress)
+- ✅ **v2.1 Platform Documentation** - Phases 7-8 (shipped 2026-01-22)
 
 ## Phases
 
@@ -21,59 +21,25 @@ See .planning/MILESTONES.md for details.
 
 </details>
 
-### 🚧 v2.1 Platform Documentation (In Progress)
+<details>
+<summary>✅ v2.1 Platform Documentation (Phases 7-8) - SHIPPED 2026-01-22</summary>
 
-**Milestone Goal:** Enable contributors to create new platform adapters without reverse-engineering
+See .planning/MILESTONES.md for details.
 
-**Phase Numbering:**
-- Integer phases (7, 8): Planned milestone work
-- Decimal phases (7.1, 7.2): Urgent insertions (marked with INSERTED)
+2 plans completed across 2 phases:
+- Platform architecture documentation with Mermaid diagrams
+- Step-by-step adapter creation guide with checklists
 
-- [x] **Phase 7: Architecture Documentation** - Explain system design and patterns
-- [x] **Phase 8: Adapter Creation Guide** - Step-by-step tutorial with checklists
+</details>
 
-## Phase Details
+## Next Milestone
 
-### Phase 7: Architecture Documentation
-**Goal**: Contributors understand the platform abstraction design and can reason about component relationships
-**Depends on**: Phase 6 (v2.0 shipped platform system to document)
-**Requirements**: ARCH-01, ARCH-02, ARCH-03
-**Success Criteria** (what must be TRUE):
-  1. Reader can explain the adapter pattern and why it was chosen over alternatives
-  2. Reader can trace the detection → registry → adapter flow from entry point to method call
-  3. Mermaid diagrams render correctly on GitHub showing component relationships
-  4. Design rationale document explains trade-offs (why not conditionals, why not inheritance)
-**Plans**: 1 plan
+No active milestone. Use `/gsd:new-milestone` to start next milestone.
 
-Plans:
-- [x] 07-01-PLAN.md — Create platform architecture documentation with Mermaid diagrams
-
-### Phase 8: Adapter Creation Guide
-**Goal**: Contributors can implement a new platform adapter end-to-end using the guide
-**Depends on**: Phase 7 (uses architecture vocabulary)
-**Requirements**: GUIDE-01, GUIDE-02, GUIDE-03, GUIDE-04, INTEG-01
-**Success Criteria** (what must be TRUE):
-  1. A new contributor can follow "Your First Adapter" from zero to working adapter
-  2. Registration checklist explicitly lists all 4 files requiring changes
-  3. Testing section shows how to run contract tests and write platform-specific tests
-  4. Pre-PR checklist allows self-verification before submitting
-  5. Links exist from main docs and PLATFORM-SUPPORT.md to new platform docs
-**Plans**: 1 plan
-
-Plans:
-- [x] 08-01-PLAN.md — Create adapter creation tutorial with checklists and integration links
-
-## Progress
-
-**Execution Order:**
-Phases execute in numeric order: 7 → 7.1 (if inserted) → 8
-
-| Phase | Milestone | Plans Complete | Status | Completed |
-|-------|-----------|----------------|--------|-----------|
-| 1-6 | v2.0 | 32/32 | Complete | 2026-01-22 |
-| 7. Architecture Documentation | v2.1 | 1/1 | Complete | 2026-01-22 |
-| 8. Adapter Creation Guide | v2.1 | 1/1 | Complete | 2026-01-22 |
+Candidates:
+- v3.0 Additional platforms (Cursor, Windsurf, Aider)
+- v3.0 Enhanced features (template system, config validation)
 
 ---
 *Roadmap created: 2026-01-22*
-*Milestone: v2.1 Platform Documentation*
+*Last milestone: v2.1 Platform Documentation (shipped)*

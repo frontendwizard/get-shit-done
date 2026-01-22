@@ -1,5 +1,33 @@
 # Project Milestones: Multi-Platform GSD
 
+## v2.1 Platform Documentation (Shipped: 2026-01-22)
+
+**Delivered:** Comprehensive documentation enabling contributors to create new platform adapters without reverse-engineering the codebase.
+
+**Phases completed:** 7-8 (2 plans total)
+
+**Key accomplishments:**
+
+- Platform architecture documentation with 3 Mermaid diagrams and 10 behavioral contracts
+- Step-by-step "Your First Adapter" tutorial with code examples
+- Registration checklist documenting 5 files requiring changes
+- Testing guide for contract tests and platform-specific tests
+- Pre-PR checklist for contributor self-verification
+- Cross-linked documentation from PLATFORM-SUPPORT.md and README.md
+
+**Stats:**
+
+- 2 documentation files created (ARCHITECTURE.md, CREATING-ADAPTERS.md)
+- 1,060 lines of documentation
+- 2 phases, 2 plans
+- ~4 min total execution time
+
+**Git range:** `8874de8` → `19de268`
+
+**What's next:** v3.0 - Additional platforms (Cursor, Windsurf, Aider) or enhanced features
+
+---
+
 ## v2.0 Multi-Platform (Shipped: 2026-01-22)
 
 **Delivered:** Platform-agnostic workflow orchestration supporting Claude Code and OpenCode with zero-migration project portability.

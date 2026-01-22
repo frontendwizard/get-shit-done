@@ -4,35 +4,35 @@
 
 See: .planning/PROJECT.md (updated 2026-01-22)
 
-**Core value:** Enable contributors to create new platform adapters without reverse-engineering
-**Current focus:** v2.1 Platform Documentation - COMPLETE
+**Core value:** Platform-agnostic workflow orchestration for AI-assisted development
+**Current focus:** No active milestone — use `/gsd:new-milestone` to start next
 
 ## Current Position
 
-Phase: 8 of 8 (Adapter Creation Guide) - COMPLETE
-Plan: 1 of 1 in Phase 8 (complete)
-Status: v2.1 Platform Documentation milestone complete
-Last activity: 2026-01-22 — Completed quick task 001: Rewrite README for OpenCode end users
+Phase: None (between milestones)
+Plan: None
+Status: v2.1 Platform Documentation shipped 2026-01-22
+Last activity: 2026-01-22 — Completed and archived milestone v2.1
 
-Progress: [██████████] 100% (v2.1 milestone)
+Progress: [██████████] 100% (v2.1 shipped)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2 (v2.1)
-- Average duration: 2 min
-- Total execution time: 4 min
+- v2.1 plans completed: 2
+- v2.1 average duration: 2 min
+- v2.1 total execution time: 4 min
 
-**By Phase:**
+**Cumulative (v2.0 + v2.1):**
+- Total plans completed: 34 (32 + 2)
+- Total phases: 8
+
+**By Phase (v2.1):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 7 | 1/1 | 2 min | 2 min |
 | 8 | 1/1 | 2 min | 2 min |
-
-**Recent Trend:**
-- Last 5 plans: 07-01 (2 min), 08-01 (2 min)
-- Trend: Consistent
 
 *Updated after each plan completion*
 
@@ -67,8 +67,8 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-22T14:35:02Z
-Stopped at: Completed 08-01-PLAN.md (v2.1 milestone complete)
+Last session: 2026-01-22
+Stopped at: Milestone v2.1 archived and shipped
 Resume file: None
 
-Next action: Start next milestone or `/gsd:complete-milestone`
+Next action: `/gsd:new-milestone` to define next milestone
