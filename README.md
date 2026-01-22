@@ -28,13 +28,16 @@ The original GSD was built for Claude Code only. This fork adds:
 ## Quick Start
 
 ```bash
-npx get-shit-done-cc
+# Clone and install
+git clone https://github.com/frontendwizard/get-shit-done.git
+cd get-shit-done
+node bin/install.js --global --platform=opencode
 ```
 
-Select your installation type (global or local), then verify in OpenCode:
+Then verify in OpenCode:
 
 ```
-/gsd:help
+/gsd-help
 ```
 
 ---
@@ -47,20 +50,20 @@ GSD has 24 commands. **14 work on OpenCode**, 10 require Claude Code's Task tool
 
 | Command | What it does |
 |---------|--------------|
-| `/gsd:help` | Show all commands |
-| `/gsd:progress` | Check status, route to next action |
-| `/gsd:discuss-phase` | Capture implementation decisions |
-| `/gsd:add-phase` | Add phase to roadmap |
-| `/gsd:insert-phase` | Insert urgent work |
-| `/gsd:remove-phase` | Remove future phase |
-| `/gsd:list-phase-assumptions` | See planned approach |
-| `/gsd:pause-work` | Create handoff when stopping |
-| `/gsd:resume-work` | Restore from last session |
-| `/gsd:add-todo` | Capture idea for later |
-| `/gsd:check-todos` | List pending todos |
-| `/gsd:map-codebase` | Analyze existing codebase |
-| `/gsd:update` | Update GSD |
-| `/gsd:whats-new` | See changelog |
+| `/gsd-help` | Show all commands |
+| `/gsd-progress` | Check status, route to next action |
+| `/gsd-discuss-phase` | Capture implementation decisions |
+| `/gsd-add-phase` | Add phase to roadmap |
+| `/gsd-insert-phase` | Insert urgent work |
+| `/gsd-remove-phase` | Remove future phase |
+| `/gsd-list-phase-assumptions` | See planned approach |
+| `/gsd-pause-work` | Create handoff when stopping |
+| `/gsd-resume-work` | Restore from last session |
+| `/gsd-add-todo` | Capture idea for later |
+| `/gsd-check-todos` | List pending todos |
+| `/gsd-map-codebase` | Analyze existing codebase |
+| `/gsd-update` | Update GSD |
+| `/gsd-whats-new` | See changelog |
 
 ### Claude Code Only
 
@@ -68,16 +71,16 @@ These commands spawn parallel agents using the Task tool, which OpenCode doesn't
 
 | Command | Why it needs Task |
 |---------|-------------------|
-| `/gsd:new-project` | Spawns 4 researcher agents + synthesizer + roadmapper |
-| `/gsd:new-milestone` | Spawns researcher agents for domain analysis |
-| `/gsd:plan-phase` | Spawns researcher + planner + checker |
-| `/gsd:execute-phase` | Spawns parallel executor agents |
-| `/gsd:verify-work` | Spawns verification agent |
-| `/gsd:audit-milestone` | Spawns auditor agent |
-| `/gsd:debug` | Spawns debugger agent |
-| `/gsd:complete-milestone` | Archives with agent |
-| `/gsd:plan-milestone-gaps` | Gap analysis agent |
-| `/gsd:quick` | Spawns planner + executor |
+| `/gsd-new-project` | Spawns 4 researcher agents + synthesizer + roadmapper |
+| `/gsd-new-milestone` | Spawns researcher agents for domain analysis |
+| `/gsd-plan-phase` | Spawns researcher + planner + checker |
+| `/gsd-execute-phase` | Spawns parallel executor agents |
+| `/gsd-verify-work` | Spawns verification agent |
+| `/gsd-audit-milestone` | Spawns auditor agent |
+| `/gsd-debug` | Spawns debugger agent |
+| `/gsd-complete-milestone` | Archives with agent |
+| `/gsd-plan-milestone-gaps` | Gap analysis agent |
+| `/gsd-quick` | Spawns planner + executor |
 
 **Full compatibility matrix:** [Platform Support](docs/PLATFORM-SUPPORT.md)
 
@@ -99,10 +102,10 @@ Or start on Claude Code with `/gsd:new-project`, then switch to OpenCode.
 ### 2. Use supported commands
 
 ```
-/gsd:discuss-phase 1     # Capture your vision
-/gsd:progress            # Check where you are
-/gsd:pause-work          # Create handoff
-/gsd:resume-work         # Continue later
+/gsd-discuss-phase 1     # Capture your vision
+/gsd-progress            # Check where you are
+/gsd-pause-work          # Create handoff
+/gsd-resume-work         # Continue later
 ```
 
 ### 3. Build manually with GSD context
