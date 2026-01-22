@@ -505,6 +505,12 @@ Configuration changes MUST backup before modifying.
 | `src/platform/adapters/opencode.ts` | OpenCode implementation | `OpenCodeAdapter` |
 | `src/platform/index.ts` | Public exports | All exports aggregated |
 
+## Adding a New Platform
+
+This document explains the **architecture**. For step-by-step instructions on implementing a new adapter, see:
+
+**[Creating Platform Adapters](CREATING-ADAPTERS.md)** - Tutorial with code examples, checklists, and testing guide.
+
 ---
 
 *Architecture documentation for GSD platform abstraction layer*

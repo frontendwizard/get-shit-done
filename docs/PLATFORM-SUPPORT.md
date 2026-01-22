@@ -87,6 +87,16 @@ These 10 commands use the `Task` tool to spawn parallel agents:
 
 **For basic workflow management,** OpenCode supports project structure, todo tracking, phase management, and session continuity.
 
+## Adding a New Platform
+
+Want to add support for another AI coding platform? See the [Adapter Creation Guide](platform/CREATING-ADAPTERS.md) for step-by-step instructions.
+
+The guide covers:
+- 4-file modification process
+- Complete code examples
+- Testing requirements
+- Pre-PR checklist
+
 ## Platform Detection
 
 GSD automatically detects your platform at runtime:
