@@ -43,10 +43,10 @@ See .planning/MILESTONES.md for details.
   2. Reader can trace the detection → registry → adapter flow from entry point to method call
   3. Mermaid diagrams render correctly on GitHub showing component relationships
   4. Design rationale document explains trade-offs (why not conditionals, why not inheritance)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 07-01: TBD (determined during plan-phase)
+- [ ] 07-01-PLAN.md — Create platform architecture documentation with Mermaid diagrams
 
 ### Phase 8: Adapter Creation Guide
 **Goal**: Contributors can implement a new platform adapter end-to-end using the guide
@@ -71,7 +71,7 @@ Phases execute in numeric order: 7 → 7.1 (if inserted) → 8
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-6 | v2.0 | 32/32 | Complete | 2026-01-22 |
-| 7. Architecture Documentation | v2.1 | 0/TBD | Not started | - |
+| 7. Architecture Documentation | v2.1 | 0/1 | Not started | - |
 | 8. Adapter Creation Guide | v2.1 | 0/TBD | Not started | - |
 
 ---
