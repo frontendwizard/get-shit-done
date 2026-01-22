@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-22)
 Phase: 8 of 8 (Adapter Creation Guide) - COMPLETE
 Plan: 1 of 1 in Phase 8 (complete)
 Status: v2.1 Platform Documentation milestone complete
-Last activity: 2026-01-22 — Completed 08-01-PLAN.md
+Last activity: 2026-01-22 — Completed quick task 001: Rewrite README for OpenCode end users
 
 Progress: [██████████] 100% (v2.1 milestone)
 
@@ -58,6 +58,12 @@ None.
 ### Blockers/Concerns
 
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 001 | Rewrite README for OpenCode end users | 2026-01-22 | ccd9e27 | [001-rewrite-readme-for-end-users](./quick/001-rewrite-readme-for-end-users/) |
 
 ## Session Continuity
 
