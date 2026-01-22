@@ -365,6 +365,94 @@ function cleanupOrphanedHooks(settings) {
 }
 
 /**
+ * Transform Claude Code agent frontmatter to OpenCode format
+ * 
+ * Claude Code format:
+ *   ---
+ *   name: gsd-executor
+ *   description: ...
+ *   tools: Read, Write, Edit, Bash
+ *   color: yellow
+ *   ---
+ * 
+ * OpenCode format:
+ *   ---
+ *   description: ...
+ *   mode: subagent
+ *   tools:
+ *     read: true
+ *     write: true
+ *     edit: true
+ *     bash: true
+ *   ---
+ */
+function transformAgentForOpenCode(content) {
+  // Match the frontmatter block
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!frontmatterMatch) {
+    return content; // No frontmatter, return as-is
+  }
+
+  const frontmatter = frontmatterMatch[1];
+  const body = content.slice(frontmatterMatch[0].length);
+
+  // Parse frontmatter fields
+  const descMatch = frontmatter.match(/^description:\s*(.+)$/m);
+  const toolsMatch = frontmatter.match(/^tools:\s*(.+)$/m);
+
+  if (!descMatch) {
+    return content; // No description, return as-is
+  }
+
+  const description = descMatch[1].trim();
+  
+  // Parse tools string (e.g., "Read, Write, Edit, Bash, Grep, Glob")
+  const toolsObj = {};
+  if (toolsMatch) {
+    const toolsList = toolsMatch[1].split(',').map(t => t.trim().toLowerCase());
+    // Map tool names (some need normalization)
+    const toolMapping = {
+      'read': 'read',
+      'write': 'write',
+      'edit': 'edit',
+      'bash': 'bash',
+      'grep': 'grep',
+      'glob': 'glob',
+      'webfetch': 'webfetch',
+      'websearch': 'webfetch', // WebSearch maps to webfetch in OpenCode
+    };
+    
+    for (const tool of toolsList) {
+      // Handle MCP tool wildcards (e.g., mcp__context7__*)
+      if (tool.startsWith('mcp_')) {
+        continue; // Skip MCP tools for now
+      }
+      const mappedTool = toolMapping[tool];
+      if (mappedTool) {
+        toolsObj[mappedTool] = true;
+      }
+    }
+  }
+
+  // Build new frontmatter in OpenCode format
+  let newFrontmatter = `---
+description: ${description}
+mode: subagent`;
+
+  // Add tools if any
+  if (Object.keys(toolsObj).length > 0) {
+    newFrontmatter += '\ntools:';
+    for (const [tool, enabled] of Object.entries(toolsObj)) {
+      newFrontmatter += `\n  ${tool}: ${enabled}`;
+    }
+  }
+
+  newFrontmatter += '\n---';
+
+  return newFrontmatter + body;
+}
+
+/**
  * Verify a directory exists and contains files
  */
 function verifyInstalled(dirPath, description) {
@@ -465,6 +553,12 @@ async function install(isGlobal, platform = 'claude-code') {
       if (entry.isFile() && entry.name.endsWith('.md')) {
         let content = fs.readFileSync(path.join(agentsSrc, entry.name), 'utf8');
         content = content.replace(/~\/\.claude\//g, pathPrefix);
+        
+        // Transform frontmatter for OpenCode platform
+        if (platform === 'opencode') {
+          content = transformAgentForOpenCode(content);
+        }
+        
         fs.writeFileSync(path.join(agentsDir, entry.name), content);
       }
     }
