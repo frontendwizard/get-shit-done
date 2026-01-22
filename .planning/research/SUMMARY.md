@@ -1,308 +1,196 @@
 # Project Research Summary
 
-**Project:** Multi-Platform GSD (Platform Abstraction Layer)
-**Domain:** Platform-agnostic AI development tool extensions
-**Researched:** 2026-01-19
-**Confidence:** MEDIUM-HIGH
+**Project:** GSD Platform Documentation (v2.1)
+**Domain:** Technical documentation for platform adapter system
+**Researched:** 2026-01-22
+**Confidence:** HIGH
 
 ## Executive Summary
 
-GSD's expansion to multi-platform support (Claude Code + OpenCode + future platforms) requires a runtime platform abstraction layer using the adapter pattern. The research reveals that GSD's current architecture is already well-positioned for this transition—commands and agents are document-driven (Markdown + YAML) and platform-agnostic by design. The challenge is abstracting the 10 integration points (agent spawning, hook registration, config management, etc.) behind platform adapters.
+GSD's platform abstraction layer is **already well-documented in code**—`adapter.ts` contains 361 lines of behavioral contracts, JSDoc comments, and implementation guidance. The documentation task is about **surfacing and organizing** this information for contributors, not creating it from scratch. This significantly reduces risk and effort.
 
-The recommended approach is **adapter pattern with dependency injection**: create a platform interface that all platforms must implement, build platform-specific adapters (ClaudeCodeAdapter, OpenCodeAdapter), and use a registry for runtime detection. Core business logic (24 commands, 7+ agents, workflows) requires zero changes—only the platform layer changes. This enables backward compatibility for existing 1.6k+ Claude Code installations while adding OpenCode support through additive architecture.
+The recommended approach uses **plain Markdown with Mermaid diagrams**, avoiding doc generators like TypeDoc or VitePress. The rationale: GSD's docs explain *how to create an adapter* (architectural guidance), not *what methods exist* (API reference). Contributors need prose with diagrams, not auto-generated method signatures. The target structure follows the Diataxis framework (tutorials, how-to, reference, explanation) adapted for a solo-maintainer context—just 4 documents in `docs/platform/`.
 
-The key risk is agent spawning API incompatibility—GSD spawns 4-7 parallel agents during workflows, and Claude Code's Task tool syntax differs completely from OpenCode's YAML agent/subtask syntax. Silent failures are likely if abstraction isn't bulletproof. Mitigation: build adapter pattern first, verify both platforms spawn agents correctly before shipping, add timeouts and verification after spawning to catch silent failures early.
+The critical risks are **undocumented behavioral contracts** (contributors implement methods correctly but miss idempotency requirements) and **missing registration documentation** (adapter works but GSD doesn't use it because registration spans 4 files). Both are mitigated by extracting existing inline documentation and creating explicit checklists.
 
 ## Key Findings
 
 ### Recommended Stack
 
-Multi-platform plugin systems require runtime abstraction over platform-specific APIs, not compile-time conditionals. The standard 2025 approach uses the adapter pattern with dependency injection. GSD's existing Node.js foundation (16.7.0+) is the correct choice—cross-platform runtimes provide stable abstractions while TypeScript adds type safety for adapter contracts.
+**Plain Markdown in `docs/platform/` with Mermaid diagrams embedded inline.**
 
-**Core technologies:**
-- **Node.js >=16.7.0** (existing): Cross-platform runtime, already used by GSD, no additional dependency
-- **TypeScript ^5.3.0** (optional): Type-safe adapter contracts, prevents "forgot to implement method X" bugs
-- **Adapter pattern**: Interface per platform, runtime selection via factory, industry standard for plugin systems
-- **env-paths ^3.0.0**: Cross-platform config directory resolution (~/.claude/ vs ~/.config/opencode/)
-- **json5 ^2.2.3**: Parse/write both JSON (settings.json) and JSONC (opencode.jsonc) with single parser
+No doc generator, no build step, no deployment pipeline. GitHub renders Mermaid natively.
 
-**Critical architectural decision:** Abstract platform APIs behind interfaces, detect platform at runtime, inject appropriate adapter. Single codebase with platform-specific implementations swapped at initialization. Total added dependencies: ~2-3MB (acceptable for developer tool).
+**Core tools:**
+- **Markdown** — Already have `docs/PLATFORM-SUPPORT.md`, zero setup cost
+- **Mermaid diagrams** — Class diagrams for adapter pattern, flowcharts for detection logic, sequence diagrams for hook registration
+- **VS Code** — Built-in Markdown preview; optional `bierner.markdown-mermaid` extension for Mermaid preview
+
+**Why NOT TypeDoc:** GSD has 1 interface with ~15 methods. TypeDoc excels for large API surfaces consumed by external developers. Contributors will read `adapter.ts` directly—TypeDoc would duplicate without adding value.
+
+**Why NOT VitePress/Docusaurus:** GSD doesn't need a documentation website. Docs live in the repo, viewed on GitHub. A doc site adds build pipeline, deployment, and version drift for a solo maintainer.
 
 ### Expected Features
 
 **Must have (table stakes):**
-- Platform Detection: Runtime environment detection to route platform-specific calls
-- Unified Installation: Single install command with checkbox for multiple platforms
-- Command Portability: Same 24 commands work across all platforms without modification
-- Configuration Abstraction: Single source of truth writes to settings.json or opencode.jsonc appropriately
-- Project Portability: .planning/ directories work across platforms with zero migration (CRITICAL for GSD value prop)
-- Agent Spawning Abstraction: Spawn subagents via Task tool (Claude Code) or YAML (OpenCode) transparently
+- Interface contract reference — Contributors must know WHAT methods to implement
+- Method-by-method specification with behavioral contracts — Purpose, params, returns, error conditions
+- Complete working example — Annotated Claude Code adapter as canonical reference
+- Quick start guide — "Your First Adapter" in under 30 minutes
+- Testing requirements — What tests must pass before PR accepted
+- Directory structure diagram — Where files go
 
-**Should have (competitive differentiators):**
-- Zero Migration Portability: Existing projects work immediately on new platform without conversion (killer feature)
-- Backward Compatibility: v1.x users upgrade to v2.x without breaking existing installations
-- Extensible Architecture: Adding Cursor/Windsurf requires minimal code (future-proofs against platform proliferation)
-- Platform-Best UX: StatusLine on Claude Code, best equivalent on OpenCode (not lowest-common-denominator)
-- Transparent Platform Switching: User doesn't think about which platform they're on
+**Should have (differentiators):**
+- Pre-PR checklist — Self-verification before submitting
+- Common mistakes section — "Don't do X because Y"
+- Capability matrix — What each platform supports (hooks, agents, status line)
+- Path resolution deep dive — env var overrides, tilde expansion
 
 **Defer (v2+):**
-- Third platform support (Cursor/Windsurf): Validate architecture with two platforms first
-- Platform-specific optimizations: Leverage unique platform features beyond core workflow
-- Migration tooling: Should be unnecessary if zero-migration portability achieved
-- Visual platform switcher: Runtime detection sufficient for MVP
+- Annotated source code walkthrough (high effort)
+- Troubleshooting FAQ (needs real issues first)
+- Architecture Decision Records
+- Video tutorials
 
 ### Architecture Approach
 
-The adapter pattern with registry pattern is the industry-standard solution. Core business logic (commands, agents, workflows) remains platform-agnostic. Platform-specific code isolated in adapters that implement a common interface. Registry detects platform at runtime and loads appropriate adapter.
+Four documents following Diataxis, organized by reader intent:
 
-**Major components:**
-1. **Platform Interface** (platforms/interface.js) — Abstract API contract all platforms implement (install, config, spawn, hooks, paths)
-2. **Platform Adapters** (platforms/claude-code/, platforms/opencode/) — Platform-specific implementations of interface
-3. **Platform Registry** (platforms/registry.js) — Runtime detection and adapter loading (singleton pattern)
-4. **Installation System** — Platform-specific installers (ClaudeCodeInstaller, OpenCodeInstaller) created via factory pattern
-5. **Business Logic** (commands/, agents/, get-shit-done/) — NO CHANGES NEEDED (already platform-agnostic)
+```
+docs/platform/
+├── README.md                # Hub + navigation (overview)
+├── ARCHITECTURE.md          # System design for understanding (explanation)
+├── CREATING-ADAPTERS.md     # Step-by-step guide (tutorial/how-to)
+└── INTERFACE-REFERENCE.md   # PlatformAdapter contract (reference)
+```
 
-**Key patterns identified:**
-- Adapter Pattern: Translate generic operations to platform-specific APIs
-- Registry Pattern: Single point of platform detection, loads correct adapter
-- Strategy Pattern: Different hook systems (Claude Code settings.json vs OpenCode plugin events)
-- Factory Pattern: Create platform-specific installers based on detected/selected platform
+**Why this structure:**
+1. README as hub — Every visitor starts here, links based on intent
+2. Separation of explanation vs reference — Architecture explains *why*, Reference gives *what*
+3. Single tutorial — Solo maintainer can't afford separate "learning" and "working" docs
+4. Mirrors code structure — `docs/platform/` corresponds to `src/platform/`
 
 ### Critical Pitfalls
 
-1. **Installation Path Hardcoding Breaking Backward Compatibility** — When adding multi-platform support, changing paths globally breaks existing .planning/ references. Prevention: Use symlinks for shared content, runtime path resolution, multi-platform coexistence, never rewrite existing .planning/ files. MUST solve in Phase 1 before any installation logic changes.
+1. **Interface without behavioral contracts** — Document ALL behavioral requirements explicitly (idempotency, error handling, side effects). Contributors see TypeScript types but miss the "hook registration must be idempotent" requirements buried in inline comments.
 
-2. **Platform Detection Race Conditions** — Runtime detection fails intermittently when run before platform APIs available. Prevention: Eager synchronous detection at module load, single source of truth (detect once, cache globally), fail-fast on unknown platform with clear error. Critical for Phase 1.
+2. **Missing complete example adapter** — Provide annotated adapter skeleton template with integration checklist. Methods work in isolation but fail when called in sequence because initialization order isn't clear.
 
-3. **Agent Spawning API Incompatibility** — Claude Code uses Task(subagent_type="..."), OpenCode uses YAML agent: + subtask: true. Silent failures when wrong API used. Prevention: Adapter pattern for spawning, verification after spawn, timeouts with clear errors. Highest risk area—GSD spawns 4-7 agents in parallel during workflows.
+3. **Undocumented registration flow** — Create explicit 4-file checklist (types.ts → detection.ts → registry.ts → adapter.ts). Contributors create perfect adapter classes that GSD never uses.
 
-4. **Hook System Impedance Mismatch** — Claude Code hooks (SessionStart, StatusLine) may have no equivalent on OpenCode. Prevention: Best-effort equivalents, feature detection (not platform detection), critical features fail loudly, nice-to-haves degrade gracefully. Phase 3 concern.
+4. **Testing without contract pattern** — Document the two-tier testing strategy (shared contract tests + platform-specific tests). Contributors write custom tests that miss behavioral requirements.
 
-5. **Configuration File Format Divergence** — settings.json (JSON) vs opencode.jsonc (JSONC with comments, different schema). Prevention: Platform-specific config writers, schema validation after write, backup before modification, don't assume config exists. Phase 1 concern.
+5. **Implicit capability impact** — Document capability-command matrix showing what breaks when `supportsHooks()` returns false. Contributors return wrong values because impact is undocumented.
 
 ## Implications for Roadmap
 
-Based on research, suggested 5-phase structure with clear dependency chain:
+Based on research, suggested phase structure:
 
-### Phase 1: Platform Abstraction Layer
-**Rationale:** Foundation that all other phases depend on. Must extract Claude Code logic to adapter structure without breaking existing users. Proves adapter pattern works with zero regression.
+### Phase 1: Reference Documentation
+**Rationale:** Pure extraction from existing code—lowest risk, establishes vocabulary for other docs
+**Delivers:** `INTERFACE-REFERENCE.md` with full contract specification
+**Addresses:** Interface contract reference (table stakes), behavioral contracts
+**Avoids:** Pitfall #1 (interface without behavioral contracts)
 
-**Delivers:**
-- Platform interface contract (platforms/interface.js)
-- ClaudeCodeAdapter wrapping existing logic
-- Platform registry with Claude Code detection
-- Backward-compatible installation (existing users see no change)
+**Content:**
+- Extract from `adapter.ts` JSDoc (361 lines of contracts)
+- PathResolver interface methods
+- PlatformAdapter interface methods with behavioral requirements
+- AgentInstance and HookType specifications
+- 10 binding requirements from inline comments
 
-**Addresses:**
-- Platform Detection (table stakes)
-- Configuration Abstraction groundwork
-- Path resolution infrastructure
+### Phase 2: Architecture Documentation
+**Rationale:** Explains existing implementation—can be verified against code
+**Delivers:** `ARCHITECTURE.md` explaining design decisions
+**Uses:** Mermaid diagrams for adapter pattern, registry pattern, detection flow
+**Implements:** System understanding for contributors
 
-**Avoids:**
-- Pitfall 1 (path hardcoding) via runtime resolution
-- Pitfall 2 (detection races) via eager sync detection
-- Pitfall 5 (config divergence) via adapter-specific writers
+**Content:**
+- Design goals (portability without scattered conditionals)
+- Component explanations (detection, registry, adapter)
+- Patterns used (adapter pattern, factory + singleton)
+- Mermaid diagrams for visual understanding
 
-**Research flag:** LOW—well-documented pattern, high confidence. No phase-specific research needed.
+### Phase 3: Tutorial/Guide
+**Rationale:** Must reference Phase 1-2 vocabulary; requires thinking through ideal workflow
+**Delivers:** `CREATING-ADAPTERS.md` step-by-step guide
+**Addresses:** Quick start, complete working example, testing requirements
+**Avoids:** Pitfall #2 (missing complete example), Pitfall #3 (undocumented registration)
 
-### Phase 2: OpenCode Adapter Implementation
-**Rationale:** Adding second platform proves abstraction is sufficient. Must happen after Phase 1 (depends on interface). Before command migration (need both adapters working to test).
+**Content:**
+- Prerequisites and setup
+- Step-by-step: Add type → Create paths → Create adapter → Add detection → Register
+- Annotated code examples from Claude Code adapter
+- Testing section with contract tests
+- Pre-PR checklist
 
-**Delivers:**
-- OpenCodeAdapter implementing platform interface
-- OpenCodeInstaller for platform-specific paths/config
-- Registry detection for OpenCode
-- CLI flag: --platform=opencode
+### Phase 4: Navigation Hub
+**Rationale:** Must be written last—summarizes and links to Phase 1-3 content
+**Delivers:** `README.md` hub document for `docs/platform/`
+**Addresses:** Directory structure, navigation, integration points
 
-**Uses:**
-- TypeScript for type safety (optional but recommended)
-- env-paths for ~/.config/opencode/ resolution
-- json5 for opencode.jsonc parsing
-
-**Avoids:**
-- Pitfall 5 (config divergence) via JSONC-aware writer
-- Pitfall 8 (non-TTY installs) via interactive detection
-- Pitfall 10 (command collisions) via namespace preservation
-
-**Research flag:** MEDIUM—needs OpenCode API verification. Phase-specific research recommended for:
-- OpenCode agent spawning API (YAML agent: + subtask: syntax verification)
-- OpenCode plugin event system (mapping to Claude Code hooks)
-- OpenCode config schema (opencode.jsonc structure)
-
-### Phase 3: Agent Spawning Abstraction
-**Rationale:** Core GSD feature depends on agent orchestration (4-7 parallel agents per workflow). Must abstract Task tool vs YAML syntax. Depends on both adapters working (Phase 1-2 complete).
-
-**Delivers:**
-- platform.spawnAgent() abstraction in adapters
-- Verification after spawn (detect silent failures)
-- Timeout handling with clear errors
-- Parallel agent spawning on both platforms
-
-**Addresses:**
-- Agent Spawning Abstraction (must-have)
-- Cross-Platform Agent Spawning (differentiator)
-
-**Avoids:**
-- Pitfall 3 (agent spawning incompatibility) via adapter translation
-- Silent failures via verification + timeouts
-
-**Research flag:** HIGH—highest risk area. Phase-specific research REQUIRED:
-- Test agent spawning on real OpenCode installation
-- Verify parallel spawning works (4+ agents simultaneously)
-- Confirm agent completion detection mechanism
-
-### Phase 4: Hook System & Lifecycle Abstraction
-**Rationale:** StatusLine and SessionStart hooks are key UX features. Different hook models require strategy pattern. Depends on config abstraction (Phase 1-2).
-
-**Delivers:**
-- platform.registerHook() abstraction
-- SessionStart mapping (Claude Code vs OpenCode plugin events)
-- StatusLine with graceful degradation
-- Feature detection (not platform detection)
-
-**Addresses:**
-- Lifecycle Hooks (table stakes)
-- Platform-Best UX (differentiator)
-
-**Avoids:**
-- Pitfall 4 (hook impedance mismatch) via best-effort equivalents
-- Pitfall 14 (platform-specific errors) via context-aware messages
-
-**Implements:**
-- Hook strategy pattern from ARCHITECTURE.md
-
-**Research flag:** MEDIUM—needs OpenCode event system mapping. Phase-specific research for:
-- Which OpenCode events map to SessionStart/Stop
-- OpenCode equivalent for StatusLine (TUI notification? plugin status API?)
-- Event data available in OpenCode callbacks
-
-### Phase 5: Testing, Validation & Polish
-**Rationale:** Prevent version drift between platforms. Ensure all 24 commands work identically. Catch platform-specific bugs before shipping.
-
-**Delivers:**
-- Shared test suite (platform-agnostic assertions)
-- Platform matrix CI (test on both platforms)
-- Regression prevention (baseline tests from v1.x)
-- Update mechanism for multi-install
-- Documentation updates
-
-**Addresses:**
-- Cross-Platform Testing
-- Backward Compatibility validation
-
-**Avoids:**
-- Pitfall 6 (version drift) via shared tests + CI matrix
-- Pitfall 9 (orphaned files) via cleanup migration
-- Pitfall 15 (update breaks multi-platform) via detect-all-installations
-
-**Research flag:** LOW—standard testing patterns. No research needed, execution-focused phase.
+**Content:**
+- Overview of platform system
+- "Where to go" navigation table by intent
+- Quick links to other docs
+- Key concepts glossary
+- Integration with existing `PLATFORM-SUPPORT.md`
 
 ### Phase Ordering Rationale
 
-**Sequential dependencies enforced:**
-1. Interface → Adapters → Command Updates (can't build adapters without contract, can't update commands until adapters work)
-2. Claude Code adapter → OpenCode adapter (prove pattern works before adding second platform)
-3. Config abstraction → Hook abstraction (hooks require config manipulation)
-4. Agent spawning → Full workflow testing (agent orchestration is GSD's core architecture)
+1. **Reference first** — Behavioral contracts from `adapter.ts` are the foundation. Everything else references these.
+2. **Architecture second** — Explains the "why" that the tutorial needs to reference.
+3. **Tutorial third** — Uses vocabulary from Phase 1-2. Can reference both docs concretely.
+4. **Hub last** — Can't write accurate summaries until content exists.
 
-**Parallel work opportunities:**
-- After Phase 1: OpenCode adapter and testing can start in parallel
-- After Phase 2: Agent spawning abstraction and hook system can be built in parallel
-- Documentation can be written throughout
-
-**Grouping rationale:**
-- Phase 1-2: Foundation (platform layer exists, both adapters implemented)
-- Phase 3-4: Feature abstraction (agent spawning and hooks work on both platforms)
-- Phase 5: Quality assurance (prevent regressions, ensure reliability)
-
-**Pitfall mapping to phases:**
-- Phase 1 prevents: Pitfalls 1, 2, 5 (path hardcoding, detection races, config divergence)
-- Phase 2 prevents: Pitfalls 8, 9, 10 (non-TTY, orphaned files, collisions)
-- Phase 3 prevents: Pitfall 3 (agent spawning incompatibility—highest risk)
-- Phase 4 prevents: Pitfall 4, 14 (hook mismatch, error messages)
-- Phase 5 prevents: Pitfall 6, 15 (version drift, update mechanism)
+This order minimizes rewrites—each phase builds on stable content from previous phases.
 
 ### Research Flags
 
-**Needs phase-specific research:**
-- **Phase 2 (OpenCode Adapter):** OpenCode API verification, agent syntax testing, plugin event enumeration
-- **Phase 3 (Agent Spawning):** Real OpenCode installation testing, parallel spawn verification, completion detection
+**Phases with standard patterns (skip `/gsd:research-phase`):**
+- **Phase 1 (Reference):** Pure extraction from existing code. No external research needed.
+- **Phase 2 (Architecture):** Explaining existing implementation. Code is the source of truth.
+- **Phase 4 (Hub):** Standard navigation pattern. Template-driven.
 
-**Standard patterns (skip research):**
-- **Phase 1 (Platform Abstraction):** Adapter pattern is well-documented, high confidence from training data
-- **Phase 5 (Testing):** Standard testing patterns, execution-focused
-
-**Critical validation points:**
-- After Phase 1: Existing Claude Code users must upgrade with zero regression
-- After Phase 2: Basic command execution must work on OpenCode
-- After Phase 3: new-project workflow must spawn 4 researchers + 1 synthesizer on both platforms
-- After Phase 4: StatusLine and SessionStart must work (or gracefully degrade) on both platforms
+**Phase potentially needing validation:**
+- **Phase 3 (Tutorial):** May benefit from reviewing Gatsby/VS Code tutorial patterns during planning, but existing FEATURES-DOCS.md research is comprehensive. Likely skip research.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Adapter pattern is proven, Node.js already used, TypeScript standard for this problem |
-| Features | HIGH | Based on GSD codebase analysis + stated project goals in PROJECT.md |
-| Architecture | HIGH | Adapter/registry patterns are well-established, existing GSD structure supports it |
-| Pitfalls | MEDIUM-HIGH | High confidence on installation/path issues (based on GSD changelog), medium on OpenCode specifics |
+| Stack | HIGH | Plain Markdown is the clear winner for solo maintainer + contributor docs. Mermaid syntax verified against official docs. |
+| Features | HIGH | Based on multiple authoritative sources (Gatsby, VS Code, Auth0) that converge on same patterns. |
+| Architecture | HIGH | Follows Diataxis, validated against GSD code structure. Build order based on clear dependency analysis. |
+| Pitfalls | HIGH | Derived from direct GSD codebase analysis—contracts exist in comments but not docs. |
 
-**Overall confidence:** MEDIUM-HIGH
-
-**Confidence breakdown:**
-- HIGH: Adapter pattern applicability, backward compatibility strategy, existing GSD architecture analysis
-- MEDIUM: OpenCode API specifics (agent spawning syntax, plugin events, config schema—inferred but not verified)
-- LOW: Future platforms (Cursor, Windsurf—general principles only, no specific knowledge)
+**Overall confidence:** HIGH
 
 ### Gaps to Address
 
-**During Phase 2 planning:**
-- Verify OpenCode agent spawning syntax (YAML agent: + subtask: true assumed from PROJECT.md, needs official docs)
-- Enumerate OpenCode plugin events (PROJECT.md mentions "20+ events" but doesn't list them)
-- Confirm opencode.jsonc schema (assumed JSONC format, need structure verification)
-- Check OpenCode command registration mechanism (flat vs directory structure confirmed, but registration API unknown)
-
-**During Phase 3 planning:**
-- Test OpenCode parallel agent spawning (does it support 4+ simultaneous agents like Claude Code?)
-- Verify agent completion detection (how does OpenCode signal agent finished?)
-- Confirm MCP tool availability on OpenCode (affects research agents using Context7)
-
-**During Phase 4 planning:**
-- Map OpenCode plugin events to Claude Code hooks (which event = SessionStart? which event = StatusLine equivalent?)
-- Determine OpenCode lifecycle hook data (what context is passed to event handlers?)
-
-**Mitigation strategy:**
-- Flag Phase 2 for /gsd:research-phase (OpenCode API deep dive before implementation)
-- Flag Phase 3 for OpenCode installation testing (validate agent spawning on real platform)
-- Build adapters iteratively: Claude Code first (high confidence), OpenCode second (validate assumptions), extract common interface third (refine abstraction)
+- **OpenCode-specific documentation:** Current docs focus on Claude Code adapter. OpenCode adapter patterns may need section in `CREATING-ADAPTERS.md` once more OpenCode contributors emerge.
+- **Real contributor feedback:** MVP priority ordering is judgment call. Adjust based on actual questions/issues from first contributors.
+- **Testing coverage:** Contract tests exist but exact coverage of behavioral requirements should be verified during Phase 3.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- GSD codebase analysis: bin/install.js, hooks/statusline.js, commands/gsd/new-project.md, CHANGELOG.md
-- .planning/PROJECT.md platform comparison table (Claude Code vs OpenCode features)
-- .planning/codebase/ directory (INTEGRATIONS.md with 10 integration points, ARCHITECTURE.md with orchestrator pattern)
-- Design Patterns: Gang of Four (adapter pattern, registry pattern, strategy pattern)
-- Multi-platform Node.js development patterns (path.join, os.homedir, TTY detection, env var handling)
+- GSD codebase: `src/platform/adapter.ts` (361 lines of behavioral contracts)
+- GSD codebase: `src/platform/adapters/claude-code.ts`, `opencode.ts` (implementation patterns)
+- GSD codebase: `tests/contract/adapter.contract.ts` (shared contract test pattern)
+- Mermaid official documentation (diagram syntax verification)
 
 ### Secondary (MEDIUM confidence)
-- npm package ecosystem: env-paths (3.0.0, 81M weekly downloads), json5 (2.2.3), which (4.0.0)—versions from Jan 2025 training data, need verification against current npm registry
-- Common multi-platform extension patterns (Prettier, ESLint, VSCode extensions do runtime detection)
-- TypeScript 5.3.0 decorator support for platform registry (training data, not verified)
+- Gatsby Source Plugin Tutorial structure (documentation patterns)
+- VS Code Extension API documentation (adapter/plugin doc patterns)
+- Auth0 SDK building principles (empathy-driven documentation)
+- Diataxis framework (documentation structure)
 
-### Tertiary (LOW confidence—needs validation)
-- OpenCode plugin event system (PROJECT.md mentions "20+ events" but doesn't enumerate them)
-- OpenCode agent spawning syntax (YAML agent: + subtask: assumed from PROJECT.md comparison, not verified with official docs)
-- OpenCode config file location (~/.config/opencode/opencode.jsonc inferred from XDG pattern, not confirmed)
-- OpenCode command registration API (directory structure mentioned but registration mechanism unknown)
-- Cursor/Windsurf extensibility (no specific knowledge, general principles only)
-
-**Recommended validation before Phase 2:**
-1. Verify npm package versions with `npm info env-paths version`, `npm info json5 version`, etc.
-2. Research OpenCode official documentation (plugin API, event system, agent spawning)
-3. Test OpenCode installation if available (verify paths, config format, command registration)
-4. Adjust platform interface based on actual OpenCode capabilities discovered
+### Tertiary (for reference)
+- ConvoyPanel documentation principles
+- Mattermost developer documentation writing guide
+- Solana Wallet Adapter documentation structure
 
 ---
-*Research completed: 2026-01-19*
+*Research completed: 2026-01-22*
 *Ready for roadmap: yes*

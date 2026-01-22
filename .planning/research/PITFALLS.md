@@ -1,903 +1,715 @@
-# Multi-Platform Extension Development Pitfalls
+# Pitfalls Research: Platform Documentation
 
-**Domain:** Multi-platform AI coding tool extensions
-**Researched:** 2026-01-19
-**Confidence:** HIGH (based on GSD architecture analysis + multi-platform development patterns)
+**Domain:** Platform adapter/plugin documentation for contributors
+**Researched:** 2026-01-22
+**Confidence:** HIGH (based on GSD architecture analysis + SDK/plugin documentation patterns)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause rewrites, data loss, or break existing users.
+Mistakes that cause major contributor confusion or abandoned PRs.
 
-### Pitfall 1: Installation Path Hardcoding Breaking Backward Compatibility
+### Pitfall 1: Interface Documentation Without Behavioral Contracts
 
 **What goes wrong:**
 
-When adding multi-platform support, developers change installation paths (`~/.claude/` → `~/.config/opencode/`) which breaks existing installations. Existing users upgrade and their `.planning/` directories stop working because file references now point to wrong locations.
+Documentation shows the `PlatformAdapter` interface methods but doesn't explain the behavioral expectations. Contributor implements `registerHook()` that adds hooks to config but doesn't check for idempotency. Result: Multiple installations create duplicate hooks.
+
+**Warning signs:**
+
+- Interface has JSDoc with method signatures only ("what") not behavior ("how")
+- Contributors ask "is this idempotent?" or "should this throw or return null?"
+- PRs implement same method differently across adapters
+- Existing adapter code has `// Idempotency check` comments not mentioned in docs
 
 **Why it happens:**
 
-- Installer changes paths globally without migration logic
-- File references (`@~/.claude/get-shit-done/...`) hardcoded in existing `.planning/` files
-- No detection of "already installed on another platform" scenario
+- Interface defines types but behavioral contracts live only in inline comments
+- TypeScript types enforce structure, not behavior
+- Contributors read interface declaration, not implementation
+- "It's obvious" syndrome - author assumes behavior is self-evident
 
 **Consequences:**
 
-- Existing users (1.6k+ npm downloads for GSD) lose access to active projects
-- `.planning/PROJECT.md` references break (commands can't load templates/workflows)
-- Hooks stop firing (settings.json points to old paths)
-- Silent failures — commands run but can't find referenced files
+- Adapters pass type checks but behave inconsistently
+- Subtle bugs: hooks duplicated, configs corrupted, agents spawn twice
+- Contributors waste time reverse-engineering existing implementations
+- Code review becomes behavioral specification review
 
 **Prevention:**
 
-1. **Symlink strategy:** Install to platform-specific paths but symlink shared content
-   ```bash
-   # OpenCode install
-   ~/.config/opencode/get-shit-done/ → ~/.claude/get-shit-done/ (symlink)
-   ~/.config/opencode/agents/gsd-*.md → ~/.claude/agents/gsd-*.md (symlinks)
-   ```
+Document ALL behavioral requirements explicitly in Architecture docs:
 
-2. **Path resolution at runtime:** Commands resolve `@~/.claude/` dynamically based on platform
-   ```javascript
-   // Platform adapter determines config root
-   const configRoot = platform.getConfigRoot(); // ~/.claude or ~/.config/opencode
-   const skillPath = path.join(configRoot, 'get-shit-done');
-   ```
+```markdown
+### registerHook() Contract
 
-3. **Install-time path rewriting only for NEW installations:** Don't rewrite paths for existing `.planning/` directories
+**Idempotency:** Multiple calls with same (hookType, hookPath) MUST result
+in single hook registration. Check existing hooks before adding.
 
-4. **Multi-platform coexistence:** Allow Claude Code AND OpenCode installations simultaneously
-   ```
-   ~/.claude/get-shit-done/          # shared content (symlink target)
-   ~/.claude/commands/gsd/           # Claude Code commands
-   ~/.config/opencode/commands/      # OpenCode commands (symlink to shared)
-   ~/.claude/agents/gsd-*.md         # shared agents
-   ```
+**Error handling:**
+- Hook file doesn't exist: Throw `Error("Hook file not found: {path}")`
+- HookType unsupported: Throw `Error("Hook type {type} not supported")`
+- Already registered: Return silently (success, no-op)
 
-**Detection:**
+**Side effects:**
+- MUST backup config before modification (per INST-05)
+- MUST create hooks structure if not exists
+```
 
-- Run `grep -r "~/.claude/" .planning/` on existing projects
-- Check if installer modifies existing `.planning/` file references
-- Test upgrade path: install v1.x, create project, upgrade to v2.x, verify commands still work
+**Doc section that should address it:** Architecture doc "Behavioral Contracts" section; each interface method gets contract specification table.
 
-**Phase mapping:** Phase 1 (Platform Abstraction Layer) MUST solve this before any installation logic changes
-
-**Real example:** GSD installer already does path replacement for `.md` files during install (`content.replace(/~\/\.claude\//g, pathPrefix)`), but this only affects newly installed files, not existing `.planning/` directories. Multi-platform expansion must preserve this safety.
+**Real example from GSD:**
+```typescript
+// adapter.ts lines 334-358 - BINDING REQUIREMENTS section
+// This is exactly the content that needs to be in contributor docs,
+// not hidden in implementation file comments
+```
 
 ---
 
-### Pitfall 2: Platform Detection Race Conditions
+### Pitfall 2: Missing "Complete Example" Adapter
 
 **What goes wrong:**
 
-Runtime platform detection fails intermittently because detection logic runs before platform APIs are available. Commands spawn on Claude Code but try to use OpenCode APIs, or vice versa.
+Documentation explains individual methods but no complete, working adapter example. Contributor implements methods correctly in isolation but misses integration: constructor doesn't initialize paths, spawnAgent doesn't use platform's getAgentsDir(), hooks registered but capability returns false.
+
+**Warning signs:**
+
+- Contributors submit PRs with "works for me" but fails integration tests
+- Questions like "where do I initialize the Paths class?"
+- Adapter methods work individually, fail when called in sequence
+- Test coverage looks good but end-to-end fails
 
 **Why it happens:**
 
-- Async initialization — platform APIs not ready when detection runs
-- Environment variable race conditions (CLAUDE_SESSION_ID vs OPENCODE_SESSION)
-- Multiple detection strategies that conflict (check API availability vs check env vars vs check file paths)
+- Tutorial shows pieces, not whole
+- Existing adapters evolved incrementally, hard to copy
+- No "starter template" to copy-paste
+- Method explanations reference other methods vaguely
 
 **Consequences:**
 
-- Commands fail with cryptic errors ("Task tool not available")
-- Agent spawning silently fails (Task tool called on OpenCode, no error thrown)
-- Hooks registered but never fire (SessionStart event doesn't exist on other platform)
-- Intermittent failures — works 80% of time, fails 20%
+- Contributors piece together adapter from scattered examples
+- Subtle ordering bugs (readConfig before paths initialized)
+- Constructor boilerplate reinvented differently each time
+- 3-4 review cycles to fix integration issues
 
 **Prevention:**
 
-1. **Eager detection at module load:** Run detection synchronously before any async operations
-   ```javascript
-   // platform-detector.js (loaded first)
-   const PLATFORM = detectPlatformSync(); // must be sync
+Provide annotated complete adapter skeleton:
 
-   function detectPlatformSync() {
-     // Check in order of reliability:
-     if (typeof claudeAPI !== 'undefined') return 'claudecode';
-     if (typeof opencodeAPI !== 'undefined') return 'opencode';
-     if (process.env.CLAUDE_CONFIG_DIR) return 'claudecode';
-     if (fs.existsSync(path.join(os.homedir(), '.config/opencode'))) return 'opencode';
-     throw new Error('Unknown platform');
-   }
-   ```
+```typescript
+/**
+ * Starter template for new platform adapters.
+ * Copy this file, rename, fill in implementations.
+ * 
+ * INTEGRATION CHECKLIST:
+ * [ ] Constructor initializes paths
+ * [ ] spawnAgent uses this.paths.getAgentsDir()
+ * [ ] Capabilities return correct values for your platform
+ * [ ] All async methods return Promises (even if trivial)
+ */
+export class NewPlatformAdapter implements PlatformAdapter {
+  readonly name: PlatformType = 'new-platform';  // Add to PlatformType union
+  readonly version: string = '1.0.0';
+  
+  private paths: NewPlatformPaths;  // Must create NewPlatformPaths class
+  
+  constructor() {
+    // REQUIRED: Initialize paths before any method uses them
+    this.paths = new NewPlatformPaths();
+  }
+  
+  // Path delegation - just forward to paths class
+  getConfigDir(): string { return this.paths.getConfigDir(); }
+  getCommandsDir(): string { return this.paths.getCommandsDir(); }
+  getAgentsDir(): string { return this.paths.getAgentsDir(); }
+  getHooksDir(): string { return this.paths.getHooksDir(); }
+  
+  // IMPLEMENT: Platform-specific config management
+  async readConfig(): Promise<Record<string, any>> {
+    // Read from your platform's config file
+    // Return {} if file doesn't exist
+    // Throw if malformed
+    throw new Error('TODO: Implement readConfig');
+  }
+  
+  // ... rest of interface with TODO markers
+}
+```
 
-2. **Single source of truth:** One detection function, called once, cached globally
-   ```javascript
-   // Anti-pattern: detecting in every adapter
-   class ClaudeAdapter {
-     isCurrentPlatform() { return detectPlatform() === 'claudecode'; } // BAD
-   }
-
-   // Pattern: global detection, adapters trust it
-   const platform = PLATFORM_REGISTRY.getCurrent(); // detected once at startup
-   ```
-
-3. **Fail-fast on unknown platform:** Don't guess, don't default, throw clear error
-   ```javascript
-   if (!PLATFORM) {
-     throw new Error(`
-       GSD cannot detect platform. Are you running in Claude Code or OpenCode?
-       If you're using a different platform, file an issue: github.com/...
-     `);
-   }
-   ```
-
-4. **Development override:** Allow explicit platform for testing
-   ```bash
-   GSD_PLATFORM=opencode /gsd:new-project  # force OpenCode adapter in Claude Code
-   ```
-
-**Detection:**
-
-- Add logging: `console.error('[GSD] Detected platform:', PLATFORM)`
-- Test in both platforms with same `.planning/` directory
-- Check for "tool not available" errors in different execution contexts
-
-**Phase mapping:** Phase 1 (Platform Abstraction Layer) — detection must be bulletproof before building adapters
+**Doc section that should address it:** "Creating Your First Adapter" tutorial with complete, annotated example; "Adapter Template" reference file in repo.
 
 ---
 
-### Pitfall 3: Agent Spawning API Incompatibility
+### Pitfall 3: Undocumented Registration in Registry/Detection
 
 **What goes wrong:**
 
-Agent spawning works on one platform but silently fails on another. Claude Code uses `Task(subagent_type="gsd-planner")`, OpenCode uses YAML `agent: gsd-planner` + `subtask: true`. Commands spawn agents using wrong syntax, agents never execute, orchestrator waits forever.
+Contributor creates perfect `CursorAdapter` class but GSD doesn't use it. Platform detection returns 'unknown', registry doesn't know about new platform. Contributor doesn't realize they need to touch 3 files.
+
+**Warning signs:**
+
+- "I created the adapter but nothing happens"
+- PRs with adapter only, missing registry/detection/types changes
+- New platform tests pass in isolation but fail in integration
+- Contributors ask "how do I make GSD use my adapter?"
 
 **Why it happens:**
 
-- Two completely different APIs for same operation
-- No error when wrong API used (Claude Code ignores unknown YAML, OpenCode ignores Task calls)
-- Commands have hundreds of agent spawn points (4 parallel researchers in new-project, waves in execute-phase)
-- Copy-paste from examples without platform context
+- Adapter creation tutorial ends at adapter file
+- Registration spread across multiple files (types.ts, detection.ts, registry.ts)
+- No checklist of "files to modify"
+- Integration points not linked in adapter docs
 
 **Consequences:**
 
-- **Silent failures:** Command says "spawning researcher agents..." but nothing happens
-- **Stuck workflows:** Orchestrator waits for agent output that never arrives
-- **Data loss:** Partial agent completions not detected (3 of 4 researchers complete, 4th silent fail)
-- **Impossible debugging:** No error message, just timeout or hang
+- PRs require multiple rounds of "also update X"
+- Contributors frustrated by "hidden requirements"
+- Incomplete PRs that add adapter but forget detection
 
 **Prevention:**
 
-1. **Adapter pattern for agent spawning:** Abstract platform-specific syntax
-   ```javascript
-   // platform-adapter.js
-   class ClaudeCodeAdapter {
-     spawnAgent(agentType, prompt, description) {
-       return `Task(prompt="${prompt}", subagent_type="${agentType}", description="${description}")`;
-     }
-   }
+Document the complete registration flow:
 
-   class OpenCodeAdapter {
-     spawnAgent(agentType, prompt, description) {
-       // OpenCode uses YAML in prompt content
-       return `Execute this as subtask using agent ${agentType}:\n\n${prompt}`;
-     }
-   }
-   ```
+```markdown
+## New Adapter Registration Checklist
 
-2. **Command template variables:** Commands use placeholders, platform injects syntax
-   ```markdown
-   ## Phase 6: Research (Parallel)
+Adding a new platform requires changes to 4 files:
 
-   {{SPAWN_AGENT agent="gsd-project-researcher" description="Stack research"}}
-   Research the technology stack for {{PROJECT_DESCRIPTION}}.
-   Write to: .planning/research/STACK.md
-   {{END_AGENT}}
-   ```
+### 1. src/platform/types.ts
+Add platform to union type:
+```typescript
+export type PlatformType = 'claude-code' | 'opencode' | 'cursor' | 'unknown';
+```
 
-   At runtime:
-   ```javascript
-   content = content.replace(/{{SPAWN_AGENT.*?}}/g, (match) => {
-     return platform.spawnAgent(extractParams(match));
-   });
-   ```
+### 2. src/platform/detection.ts
+Add detection logic (priority: env var → marker file → filesystem):
+```typescript
+// Check for Cursor
+const cursorConfig = path.join(homeDir, '.cursor', 'config.json');
+const hasCursor = fs.existsSync(cursorConfig);
+```
 
-3. **Verification after spawn:** Don't assume spawn succeeded
-   ```bash
-   # After spawning 4 parallel researchers
-   sleep 2  # give agents time to start
-   if [ $(ps aux | grep gsd-project-researcher | wc -l) -lt 4 ]; then
-     echo "ERROR: Not all researchers spawned"
-     exit 1
-   fi
-   ```
+### 3. src/platform/registry.ts
+Add case in createPathResolver:
+```typescript
+case 'cursor':
+  return new CursorPaths();
+```
 
-4. **Timeout with clear error:** Don't wait forever
-   ```bash
-   timeout 600 wait-for-research-files || {
-     echo "ERROR: Research agents didn't complete within 10min"
-     echo "Expected: STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md"
-     echo "Found: $(ls .planning/research/)"
-     exit 1
-   }
-   ```
+### 4. src/platform/adapters/cursor.ts
+Create adapter implementation (see template above)
 
-**Detection:**
+## Validation
 
-- Test every command that spawns agents on both platforms
-- Add debug mode: `GSD_DEBUG=1 /gsd:new-project` logs agent spawn attempts
-- Check for "waiting for..." messages that never resolve
+After registration, verify:
+```bash
+GSD_PLATFORM=cursor npm test -- --grep "Cursor"
+```
+```
 
-**Phase mapping:** Phase 2 (Agent Spawning Abstraction) — MUST verify both platforms spawn agents successfully
-
-**Real example:** GSD spawns 4 parallel researchers + 1 synthesizer in new-project (lines 334-512 of new-project.md). If OpenCode version doesn't handle Task tool, all 5 agents silently fail.
+**Doc section that should address it:** "Adding a New Platform" guide with explicit checklist; registration diagram showing file relationships.
 
 ---
 
-### Pitfall 4: Hook System Impedance Mismatch
+### Pitfall 4: Testing Guide Without Contract Test Pattern
 
 **What goes wrong:**
 
-Claude Code hooks (SessionStart, StatusLine) have no equivalent on OpenCode, or use completely different event systems. StatusLine shows task progress on Claude Code, but nothing appears on OpenCode. SessionStart loads project state on Claude Code, but OpenCode users start every session from scratch.
+Documentation says "write tests for your adapter" but doesn't explain the shared contract test pattern. Contributor writes their own test suite that doesn't cover contract requirements, or duplicates tests that exist in shared test file.
+
+**Warning signs:**
+
+- New adapter tests don't run `runAdapterContractTests()`
+- Duplicate assertions across adapter test files
+- Contract violations not caught until integration
+- PRs with extensive tests that miss behavioral requirements
 
 **Why it happens:**
 
-- Platform philosophy differences (Claude Code: hook-based, OpenCode: plugin events)
-- Rich platform features (StatusLine) vs minimal platform (no statusline concept)
-- No graceful degradation strategy
-- Assuming platform feature parity
+- Shared contract tests exist but not mentioned in docs
+- "Just look at the other test files" - but which parts to copy?
+- Contract tests vs platform-specific tests not distinguished
+- Test file organization not explained
 
 **Consequences:**
 
-- **UX regression:** Features disappear on other platform (no task progress indicator)
-- **Workflow breaks:** SessionStart hook critical for loading `.planning/STATE.md`, OpenCode users have no state memory
-- **User confusion:** "Why doesn't it show my current task?" (worked on Claude Code, broken on OpenCode)
-- **Maintenance divergence:** StatusLine logic in hooks/statusline.js never ported to OpenCode
+- Contract violations slip through (path not absolute, config not preserved)
+- Duplicated test maintenance
+- Inconsistent test coverage across adapters
+- Test suite grows without adding value
 
 **Prevention:**
 
-1. **Best-effort equivalents:** Implement approximations when exact feature unavailable
-   ```javascript
-   // Claude Code: native statusline
-   class ClaudeCodeAdapter {
-     showTaskProgress(task) {
-       // hooks/statusline.js handles this via SessionStart event
-     }
-   }
+Document the two-tier testing strategy explicitly:
 
-   // OpenCode: fallback to console output
-   class OpenCodeAdapter {
-     showTaskProgress(task) {
-       console.log(`\n[GSD] Current task: ${task}\n`);
-     }
-   }
-   ```
+```markdown
+## Testing Your Adapter
 
-2. **Feature detection, not platform detection:**
-   ```javascript
-   if (platform.supports('statusline')) {
-     platform.registerStatusLine(statuslineScript);
-   } else {
-     console.warn('[GSD] Statusline not supported on this platform');
-   }
-   ```
+GSD uses a two-tier testing strategy:
 
-3. **Critical features fail loudly, nice-to-haves degrade gracefully:**
-   ```javascript
-   // Critical: state loading (required for GSD to work)
-   if (!platform.supports('session-start')) {
-     throw new Error('Platform must support session initialization hooks');
-   }
+### Tier 1: Contract Tests (Shared)
 
-   // Nice-to-have: statusline (improves UX but not required)
-   if (!platform.supports('statusline')) {
-     console.warn('[GSD] No statusline support - progress shown in console only');
-   }
-   ```
+Every adapter MUST pass the shared contract tests. These verify the
+`PlatformAdapter` interface behavioral requirements.
 
-4. **Document platform feature matrix:**
-   ```markdown
-   | Feature | Claude Code | OpenCode | Fallback |
-   |---------|-------------|----------|----------|
-   | StatusLine | Native hook | None | Console output |
-   | SessionStart | settings.json | Plugin event | Manual /gsd:resume-work |
-   | Parallel agents | Task tool | YAML subtask | Sequential execution |
-   ```
+```typescript
+// tests/contract/cursor.contract.test.ts
+import { runAdapterContractTests } from './adapter.contract';
+import { CursorAdapter } from '../../src/platform/adapters/cursor';
 
-**Detection:**
+// This runs ALL shared contract tests
+runAdapterContractTests('CursorAdapter', () => new CursorAdapter());
+```
 
-- Test full workflow on both platforms
-- Check for "expected behavior X didn't happen" reports
-- Monitor feature usage: if statusline doesn't update, investigate
+Contract tests verify:
+- Path methods return absolute paths (never relative)
+- Config methods preserve existing settings
+- Hook registration is idempotent
+- All async methods return Promises
 
-**Phase mapping:** Phase 3 (Hook System Abstraction) — map features, build equivalents, document gaps
+### Tier 2: Platform-Specific Tests
 
-**Real example:** GSD statusline (hooks/statusline.js) reads todos, shows context usage, current task. OpenCode has 20+ plugin events but no statusline equivalent. Must find closest match or gracefully degrade.
+After contract tests pass, add platform-specific behavior tests:
+
+```typescript
+describe('CursorAdapter - Platform-Specific', () => {
+  it('reads from .cursor/config.json (not settings.json)', async () => {
+    // Test Cursor-specific config location
+  });
+  
+  it('supports native Cursor agent spawning', () => {
+    // Test Cursor-specific spawning mechanism
+  });
+});
+```
+
+### Test Isolation
+
+All adapter tests use temp directories to avoid touching real config:
+
+```typescript
+beforeAll(() => {
+  testTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-cursor-test-'));
+  process.env.CURSOR_CONFIG_DIR = testTmpDir;  // Redirect adapter
+});
+```
+```
+
+**Doc section that should address it:** "Testing Guide" with contract vs platform-specific sections; template test file; test isolation pattern.
 
 ---
 
-### Pitfall 5: Configuration File Format Divergence
+### Pitfall 5: Implicit Knowledge About Capability Differences
 
 **What goes wrong:**
 
-Installer writes `settings.json` for Claude Code but OpenCode uses `opencode.jsonc` with different schema. Hooks registered in wrong file, commands don't load, slash command registration fails.
+Documentation shows capability methods (`supportsHooks()`, `supportsParallelAgents()`) without explaining that capabilities affect which commands work. Contributor implements adapter where `supportsHooks() = false` but doesn't realize this disables 9 GSD commands.
+
+**Warning signs:**
+
+- "Why don't hooks work on my platform?"
+- Contributor returns `false` for capabilities without understanding impact
+- PRs with incorrect capability values (returning true when feature doesn't work)
+- Feature works in isolation but fails in GSD workflow
 
 **Why it happens:**
 
-- Different config formats (JSON vs JSONC with comments)
-- Different schemas (Claude Code: `hooks: { SessionStart: [...] }`, OpenCode: `plugins: [...]`)
-- Installer hardcodes settings.json manipulation
-- No schema validation
+- Capability methods look like simple boolean getters
+- Impact of capabilities not documented
+- No command-capability matrix
+- "Just return false if unsupported" oversimplifies
 
 **Consequences:**
 
-- **Installer succeeds but nothing works:** Files copied, config written, but platform ignores it
-- **Silent registration failures:** Slash commands don't appear in autocomplete
-- **Hook registration in wrong file:** settings.json modified but platform reads opencode.jsonc
-- **Config corruption:** Writing JSON to JSONC file breaks comments/formatting
+- Silent feature degradation (commands skip behavior, no error)
+- User confusion ("worked on Claude Code, not on Cursor")
+- Contributors hardcode wrong capability values
+- Feature testing incomplete (didn't test with capability=false)
 
 **Prevention:**
 
-1. **Platform-specific config writers:**
-   ```javascript
-   class ClaudeCodeAdapter {
-     registerCommands(commandsDir) {
-       const settingsPath = path.join(this.configRoot, 'settings.json');
-       const settings = JSON.parse(fs.readFileSync(settingsPath));
-       settings.customCommandsDirectory = commandsDir;
-       fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
-     }
-   }
+Document capability impact explicitly:
 
-   class OpenCodeAdapter {
-     registerCommands(commandsDir) {
-       const configPath = path.join(this.configRoot, 'opencode.jsonc');
-       // JSONC requires preserving comments
-       const config = parseJSONC(fs.readFileSync(configPath));
-       config.commandsPath = commandsDir;
-       fs.writeFileSync(configPath, stringifyJSONC(config));
-     }
-   }
-   ```
+```markdown
+## Capability Methods
 
-2. **Schema validation after write:**
-   ```javascript
-   platform.registerCommands(commandsDir);
+Each capability method controls feature availability. Return values affect
+which GSD features work on your platform.
 
-   // Verify registration worked
-   if (!platform.isCommandRegistered('gsd:new-project')) {
-     throw new Error('Command registration failed - settings not updated correctly');
-   }
-   ```
+### supportsParallelAgents()
 
-3. **Backup before modification:**
-   ```javascript
-   function safeConfigUpdate(configPath, updateFn) {
-     const backup = configPath + '.backup';
-     fs.copyFileSync(configPath, backup);
-     try {
-       updateFn(configPath);
-       fs.unlinkSync(backup);
-     } catch (e) {
-       fs.copyFileSync(backup, configPath);
-       throw e;
-     }
-   }
-   ```
+**Returns:** `true` if platform can spawn multiple agents concurrently
 
-4. **Don't assume config exists:**
-   ```javascript
-   const settingsPath = path.join(claudeDir, 'settings.json');
-   if (!fs.existsSync(settingsPath)) {
-     // Create minimal settings.json
-     fs.writeFileSync(settingsPath, JSON.stringify({
-       customCommandsDirectory: 'commands',
-       hooks: {}
-     }, null, 2));
-   }
-   ```
+**Impact when false:**
+- `/gsd:new-project` spawns researchers sequentially (slower)
+- `/gsd:execute-phase` runs tasks one-at-a-time
+- 4-agent parallel research becomes 4 sequential calls
 
-**Detection:**
+**How to determine:** Can your platform run multiple AI instances
+simultaneously? Claude Code: Task tool supports parallel. OpenCode: 
+CLI spawn supports parallel.
 
-- After install, verify commands appear in platform UI
-- Test hook firing: trigger SessionStart, check if hook executes
-- Parse config after write to verify valid JSON/JSONC
+### supportsHooks()
 
-**Phase mapping:** Phase 1 (Platform Abstraction Layer) — config manipulation must be platform-aware from day 1
+**Returns:** `true` if platform has lifecycle hook system
+
+**Impact when false:**
+- SessionStart hooks don't run (no auto-context loading)
+- StatusLine not available (no progress indicator)
+- Users must manually run `/gsd:resume-work` each session
+
+**How to determine:** Does your platform have pre-session or
+post-session hooks? Claude Code: settings.json hooks. OpenCode: no
+equivalent (graceful degradation).
+
+### supportsStatusLine()
+
+**Returns:** `true` if platform can display persistent status
+
+**Impact when false:**
+- Progress shown in console only, not status bar
+- No context usage indicator
+- Purely cosmetic - no workflow impact
+
+## Command-Capability Matrix
+
+| Command | Requires Parallel | Requires Hooks | Requires StatusLine |
+|---------|-------------------|----------------|---------------------|
+| /gsd:new-project | Optimal but works | Works without | Works without |
+| /gsd:resume-work | No | Automatic with, manual without | No |
+| /gsd:execute-phase | Optimal but works | No | No |
+```
+
+**Doc section that should address it:** "Capabilities" reference section; command-capability matrix; graceful degradation explanation.
 
 ---
 
-### Pitfall 6: Version Drift Between Platform Implementations
+## Common Pitfalls
+
+Frequent but less severe issues.
+
+### Pitfall 6: Config File Format Not Specified
 
 **What goes wrong:**
 
-Feature added to Claude Code version but forgotten in OpenCode implementation. Version 1.7.0 ships with feature X working on Claude Code, broken on OpenCode. Users on different platforms have different experiences.
+Documentation mentions "read and write platform config" but doesn't specify format. Contributor writes JSON to a platform expecting JSONC (comments get stripped), or writes with wrong indentation, or doesn't handle missing file.
 
-**Why it happens:**
+**Warning signs:**
 
-- Code duplication across platform adapters
-- No shared test suite
-- Platform-specific branches in git (merge conflicts)
-- "Fix it on one platform" without updating others
-- Solo maintainer forgetting which platform last tested
-
-**Consequences:**
-
-- **Fragmented user experience:** "Works for me" (on Claude Code) vs "broken" (on OpenCode)
-- **Hard-to-reproduce bugs:** Only happens on one platform
-- **Regression introduction:** Fix for Claude Code breaks OpenCode
-- **Maintenance nightmare:** 2x the testing for every change
+- "My config file got corrupted after GSD install"
+- PRs with `JSON.stringify()` for platforms using JSONC
+- Contributors ask "what format should I use?"
+- Config methods work but break platform's native config reading
 
 **Prevention:**
 
-1. **Shared test suite, platform-agnostic assertions:**
-   ```javascript
-   describe('new-project command', () => {
-     it('creates PROJECT.md', async () => {
-       await runCommand('gsd:new-project', platform);
-       expect(fs.existsSync('.planning/PROJECT.md')).toBe(true);
-     });
+Specify config requirements per platform:
 
-     it('spawns 4 research agents', async () => {
-       const agents = await runCommand('gsd:new-project', platform);
-       expect(agents.spawned.length).toBe(4);
-     });
-   });
-   ```
+```markdown
+### Config File Requirements
 
-2. **Feature flags for platform-specific behavior:**
-   ```javascript
-   if (platform.supports('parallel-agents')) {
-     spawnInParallel(researchers);
-   } else {
-     for (const researcher of researchers) {
-       await spawnSequential(researcher);
-     }
-   }
-   ```
+Each platform has specific config format requirements:
 
-3. **Platform matrix in CI:**
-   ```yaml
-   # .github/workflows/test.yml
-   strategy:
-     matrix:
-       platform: [claudecode, opencode]
-   steps:
-     - run: npm test -- --platform=${{ matrix.platform }}
-   ```
+| Platform | File | Format | Comments | Creation |
+|----------|------|--------|----------|----------|
+| Claude Code | settings.json | JSON | No | Create if missing |
+| OpenCode | opencode.json | JSONC | Preserve | Create if missing |
+| Cursor | config.json | JSON | No | Never create |
 
-4. **Changelog enforcement:**
-   ```markdown
-   ## [1.7.0] - 2026-01-20
+**JSONC platforms:** Use `jsonc-parser` to read/write:
+```typescript
+import { parse, modify, applyEdits } from 'jsonc-parser';
+// Preserves comments when modifying
+```
 
-   ### Added
-   - Feature X [Claude Code ✓] [OpenCode ✓]
+**Missing config:** Return `{}` from `readConfig()`, don't throw.
+```
 
-   ### Fixed
-   - Bug Y [Claude Code ✓] [OpenCode: not applicable]
-   ```
-
-5. **Single source of truth for command logic:**
-   ```
-   commands/
-     gsd/
-       new-project.md          # platform-agnostic prompt
-   src/
-     adapters/
-       claudecode-adapter.js   # only spawning/config differences
-       opencode-adapter.js
-     commands/
-       new-project.js          # shared orchestration logic
-   ```
-
-**Detection:**
-
-- Run same command on both platforms, compare output
-- Automated diff: `.planning/PROJECT.md` should be identical regardless of platform
-- Version compatibility matrix in README
-
-**Phase mapping:** Phase 4 (Testing & Validation) — build test suite that runs on both platforms before shipping
+**Doc section that should address it:** "Configuration Management" section with format table.
 
 ---
 
-## Moderate Pitfalls
-
-Mistakes that cause delays or technical debt.
-
-### Pitfall 7: Path Separator Hardcoding
+### Pitfall 7: Path Resolution Edge Cases Undocumented
 
 **What goes wrong:**
 
-Commands use Unix path separators (`/`) which break on Windows. Paths like `~/.claude/get-shit-done/templates/project.md` fail to resolve.
+Documentation shows `getConfigDir()` returns path but doesn't explain environment variable overrides or tilde expansion. Contributor hardcodes `~/.cursor/` instead of checking `CURSOR_CONFIG_DIR`.
 
-**Why it happens:**
+**Warning signs:**
 
-- Development on Mac/Linux, testing on Mac/Linux
-- Assuming POSIX paths
-- Not testing on Windows (WSL2 support added in 1.6.4 suggests Windows was afterthought)
-
-**Consequences:**
-
-- Windows users can't install
-- File references break (templates not found)
-- Commands fail with ENOENT errors
+- Tests pass locally, fail in CI (different home dir)
+- Contributor doesn't implement env var override
+- Tilde in paths breaks Windows
 
 **Prevention:**
 
-1. **Use path.join() everywhere:**
-   ```javascript
-   // BAD
-   const templatePath = configRoot + '/get-shit-done/templates/project.md';
+Document path resolution requirements:
 
-   // GOOD
-   const templatePath = path.join(configRoot, 'get-shit-done', 'templates', 'project.md');
+```markdown
+### Path Resolution Requirements
+
+All path methods MUST:
+
+1. **Check environment variable first:**
+   ```typescript
+   const envDir = process.env.CURSOR_CONFIG_DIR;
+   if (envDir) return this.expandTilde(envDir);
    ```
 
-2. **Normalize in installer:**
-   ```javascript
-   function expandTilde(filePath) {
-     if (filePath && filePath.startsWith('~/')) {
-       return path.join(os.homedir(), filePath.slice(2)); // path.join handles separators
+2. **Expand tilde (~) in paths:**
+   ```typescript
+   private expandTilde(filePath: string): string {
+     if (filePath.startsWith('~/')) {
+       return path.join(os.homedir(), filePath.slice(2));
      }
      return filePath;
    }
    ```
 
-**Phase mapping:** Phase 1 — path handling in abstraction layer
+3. **Return absolute paths (never relative):**
+   ```typescript
+   // WRONG: return '.cursor'
+   // RIGHT: return path.join(os.homedir(), '.cursor')
+   ```
 
----
-
-### Pitfall 8: Assuming Interactive Terminal
-
-**What goes wrong:**
-
-Installer prompts for input but runs in CI/automated environment without TTY. Install hangs waiting for stdin.
-
-**Why it happens:**
-
-- Using readline without checking `process.stdin.isTTY`
-- No fallback for non-interactive mode
-
-**Consequences:**
-
-- CI pipelines hang
-- Docker builds fail
-- Automated deploys broken
-
-**Prevention:**
-
-```javascript
-// Detect non-interactive and fallback to global install
-if (!process.stdin.isTTY) {
-  console.log('  Non-interactive terminal detected, installing globally');
-  return install(true);
-}
+4. **Use path.join() for cross-platform:**
+   ```typescript
+   // WRONG: return configDir + '/commands'
+   // RIGHT: return path.join(configDir, 'commands')
+   ```
 ```
 
-**Phase mapping:** Phase 2 (Installer) — detect environment
-
-**Real example:** GSD 1.6.4 changelog: "Installation on WSL2/non-TTY terminals now works correctly - detects non-interactive stdin and falls back to global install automatically"
+**Doc section that should address it:** "Path Resolution" section with code examples.
 
 ---
 
-### Pitfall 9: Orphaned Files From Previous Versions
+### Pitfall 8: Error Handling Philosophy Unclear
 
 **What goes wrong:**
 
-Platform abstraction changes file structure. Old files remain after upgrade, causing conflicts. `gsd-notify.sh` removed in 1.6.x but not cleaned up, hook registration remains in settings.json.
+Some adapter methods throw errors, others return null/empty, others silently succeed. Contributor inconsistent with error handling, leading to unpredictable behavior.
 
-**Why it happens:**
+**Warning signs:**
 
-- Installer copies new files but doesn't remove old ones
-- Hook registrations persist in settings.json even if file deleted
-- No migration logic
-
-**Consequences:**
-
-- Hooks try to execute non-existent files
-- Disk space waste (minor)
-- Confusion about which version is active
+- PRs mix throw/return-null for similar errors
+- "Should this throw or return empty object?"
+- Silent failures in production
 
 **Prevention:**
 
-```javascript
-function cleanupOrphanedFiles(claudeDir) {
-  const orphanedFiles = [
-    'hooks/gsd-notify.sh',
-  ];
-  for (const relPath of orphanedFiles) {
-    const fullPath = path.join(claudeDir, relPath);
-    if (fs.existsSync(fullPath)) {
-      fs.unlinkSync(fullPath);
-      console.log(`✓ Removed orphaned ${relPath}`);
-    }
-  }
-}
-```
-
-**Phase mapping:** Phase 2 (Installer) — add cleanup step
-
-**Real example:** GSD 1.6.4 changelog: "Orphaned `gsd-notify.sh` hook from previous versions is now automatically removed during install (both file and settings.json registration)"
-
----
-
-### Pitfall 10: Command Name Collisions
-
-**What goes wrong:**
-
-Claude Code uses `commands/gsd/*.md` directory structure, OpenCode uses flat `commands/*.md`. Installing on both platforms causes `/gsd:new-project` to collide with `/new-project`.
-
-**Why it happens:**
-
-- Different command namespacing conventions
-- Installer doesn't check for existing commands
-- Both platforms try to register same slash command
-
-**Consequences:**
-
-- Command registration fails
-- Wrong command executes
-- Autocomplete shows duplicates
-
-**Prevention:**
-
-1. **Namespace preservation:**
-   ```
-   Claude Code: commands/gsd/new-project.md → /gsd:new-project
-   OpenCode: commands/gsd-new-project.md → /gsd-new-project (or /gsd:new-project if supported)
-   ```
-
-2. **Pre-install collision check:**
-   ```javascript
-   function checkCommandCollisions(platform) {
-     const existingCommands = platform.listRegisteredCommands();
-     const gsdCommands = ['gsd:new-project', 'gsd:plan-phase', ...];
-     const collisions = gsdCommands.filter(c => existingCommands.includes(c));
-     if (collisions.length > 0) {
-       throw new Error(`Commands already registered: ${collisions.join(', ')}`);
-     }
-   }
-   ```
-
-**Phase mapping:** Phase 2 (Installer) — validate before registration
-
----
-
-### Pitfall 11: Hardcoded Agent Names in Commands
-
-**What goes wrong:**
-
-Commands reference `~/.claude/agents/gsd-planner.md` but OpenCode expects agents in different location.
-
-**Why it happens:**
-
-- Agent paths hardcoded in command prompts
-- No runtime resolution
-
-**Consequences:**
-
-- Agent spawning fails (agent file not found)
-- Commands break on OpenCode
-
-**Prevention:**
+Document error handling philosophy:
 
 ```markdown
-## Spawn Planner Agent
+### Error Handling Convention
 
-{{AGENT_PATH "gsd-planner"}}  <!-- runtime resolution -->
+**Throw when:**
+- File exists but malformed (config parse error)
+- Required operation fails (can't write config)
+- Agent file not found (spawnAgent)
 
-Instead of:
+**Return empty/null when:**
+- File doesn't exist yet (config not created = `{}`)
+- No-op success (unregisterHook on non-existent hook)
 
-@~/.claude/agents/gsd-planner.md  <!-- hardcoded -->
+**Silent success when:**
+- Idempotent operation already done (hook already registered)
+- Graceful degradation (registerHook on unsupported platform)
+
+### Error Messages
+
+Include context in errors:
+```typescript
+// WRONG
+throw new Error('File not found');
+
+// RIGHT  
+throw new Error(`Agent file not found: ${agentPath}`);
+```
 ```
 
-**Phase mapping:** Phase 2 (Agent Spawning Abstraction)
+**Doc section that should address it:** "Error Handling" section in adapter guide.
 
 ---
 
-### Pitfall 12: Platform-Specific Tool Dependencies
+### Pitfall 9: Stub Methods Without Migration Plan
 
 **What goes wrong:**
 
-Commands assume MCP tools available (Context7, WebSearch) but OpenCode doesn't support MCP.
+Contributor sees existing adapters have `throw new Error('Not implemented in Phase X')` stubs. Copies pattern but doesn't understand: stubs are legacy, new adapters should implement. Submits adapter with stubs that will never be filled in.
 
-**Why it happens:**
+**Warning signs:**
 
-- Commands written for Claude Code ecosystem
-- No tool availability detection
-
-**Consequences:**
-
-- Research agents fail (Context7 not available)
-- Features silently degraded
+- PRs with `throw new Error('TODO')` for optional methods
+- Contributor assumes stubs are acceptable
+- Copied stub patterns from v1.0 adapters in v2.0 adapter
 
 **Prevention:**
 
-```javascript
-if (platform.supports('mcp-tools')) {
-  await queryContext7(library);
-} else {
-  console.warn('[GSD] Context7 not available, falling back to WebSearch');
-  await webSearch(library);
+Document stub status explicitly:
+
+```markdown
+### Method Implementation Status
+
+| Method | Required | Notes |
+|--------|----------|-------|
+| readConfig | YES | Must implement |
+| writeConfig | YES | Must implement |
+| registerHook | Conditional | Implement OR return silently if !supportsHooks() |
+| spawnAgent | YES | Must implement |
+| registerCommand | NO* | Handled by installer, stub OK |
+
+*Methods marked with stubs in existing adapters are legacy from phased
+implementation. New adapters should implement fully or use graceful
+degradation pattern.
+
+### Graceful Degradation Pattern
+
+For unsupported features, don't throw - silently succeed:
+```typescript
+async registerHook(hookType: HookType, hookPath: string): Promise<void> {
+  // Platform doesn't support hooks - silent no-op (not an error)
+  return;
 }
 ```
+```
 
-**Phase mapping:** Phase 3 (Tool Abstraction)
+**Doc section that should address it:** "Implementation Status" table in adapter guide.
 
 ---
 
-## Minor Pitfalls
-
-Mistakes that cause annoyance but are fixable.
-
-### Pitfall 13: Inconsistent File Naming Between Platforms
+### Pitfall 10: Unclear Contribution Scope
 
 **What goes wrong:**
 
-Claude Code creates `01-setup/` (zero-padded), OpenCode creates `1-setup/` (unpadded). Commands expect one format, fail on other.
+Contributor wants to add Cursor support. Unclear if they should: (a) just create adapter, (b) also update installer, (c) also create Cursor-specific commands, (d) also add Cursor to CI. Scope creep or incomplete PRs.
 
-**Why it happens:**
+**Warning signs:**
 
-- Different phase directory creation logic
-- No normalization
-
-**Consequences:**
-
-- Phase not found errors
-- Manual renaming required
+- "Is this PR done or do I need to do more?"
+- PRs either too minimal (adapter only) or too ambitious (installer rewrite)
+- Contributors don't know when to stop
 
 **Prevention:**
 
-```javascript
-function normalizePhaseDir(phase) {
-  const padded = String(phase).padStart(2, '0');
-  // Check both formats
-  const dirs = [
-    `.planning/${padded}-*`,
-    `.planning/${phase}-*`
-  ];
-  for (const pattern of dirs) {
-    const matches = glob.sync(pattern);
-    if (matches.length > 0) return matches[0];
-  }
-  throw new Error(`Phase ${phase} directory not found`);
-}
+Define clear contribution boundaries:
+
+```markdown
+### Contribution Scope Guide
+
+**Minimal viable adapter contribution:**
+- [ ] New adapter class implementing PlatformAdapter
+- [ ] New paths class implementing PathResolver
+- [ ] Detection logic addition
+- [ ] Registry update
+- [ ] Contract tests passing
+- [ ] Platform-specific tests
+
+**Separate PRs (not required for adapter):**
+- Installer multi-platform TUI (separate PR)
+- CI platform matrix (separate PR)
+- Platform-specific commands (separate PR)
+- Documentation updates (can include)
+
+**What reviewers check:**
+1. Contract tests pass
+2. Detection reliable
+3. No regression to existing platforms
+4. Code follows existing patterns
 ```
 
-**Phase mapping:** Phase 4 (Validation)
-
-**Real example:** GSD 1.5.23 changelog: "Consistent zero-padding for phase directories (01-name, not 1-name)"
+**Doc section that should address it:** "Contributing a New Adapter" guide with scope checklist.
 
 ---
 
-### Pitfall 14: Platform-Specific Error Messages
+## Prevention Matrix
 
-**What goes wrong:**
-
-Error says "Run settings.json check" on OpenCode (which has no settings.json).
-
-**Why it happens:**
-
-- Hardcoded error messages
-- No platform context in errors
-
-**Consequences:**
-
-- User confusion
-- Support burden
-
-**Prevention:**
-
-```javascript
-throw new Error(`
-  Configuration error. Check ${platform.configFile()}:
-  ${platform.configFile() === 'settings.json'
-    ? 'Ensure customCommandsDirectory is set'
-    : 'Ensure commandsPath is configured'}
-`);
-```
-
-**Phase mapping:** Phase 4 (Polish)
+| Pitfall | Warning Sign | Prevention | Doc Section |
+|---------|--------------|------------|-------------|
+| 1. Interface without behavioral contracts | "Should this throw?" questions | Document ALL behavioral requirements explicitly | Architecture: Behavioral Contracts |
+| 2. Missing complete example | Integration fails, pieces work | Provide annotated adapter skeleton template | Tutorial: Creating Your First Adapter |
+| 3. Undocumented registration | "Adapter works but GSD ignores it" | 4-file registration checklist | Guide: Adding a New Platform |
+| 4. Testing without contract pattern | Custom tests miss contract requirements | Document two-tier testing strategy | Testing Guide |
+| 5. Implicit capability impact | Wrong capability values, silent failures | Capability-command matrix | Reference: Capabilities |
+| 6. Config format not specified | Config corruption | Format requirements table per platform | Reference: Configuration |
+| 7. Path edge cases | Tests fail in CI | Path resolution requirements checklist | Reference: Path Resolution |
+| 8. Error handling unclear | Inconsistent throw/return | Error handling philosophy doc | Reference: Error Handling |
+| 9. Stub methods copied | PRs with unfilled stubs | Implementation status table | Adapter Guide |
+| 10. Unclear contribution scope | Scope creep or incomplete PRs | Contribution scope checklist | Contributing Guide |
 
 ---
 
-### Pitfall 15: Update Mechanism Breaks Multi-Platform
+## Documentation Structure Recommendation
 
-**What goes wrong:**
+Based on pitfalls, documentation should include:
 
-`/gsd:update` command assumes single installation location. User has both Claude Code and OpenCode installed, update only updates one.
+### 1. Architecture Overview (addresses #1, #5)
+- System component diagram
+- Adapter pattern explanation  
+- **Behavioral Contracts section** (critical)
+- Capability impact matrix
 
-**Why it happens:**
+### 2. Creating Your First Adapter (addresses #2, #3)
+- **Complete annotated template** (critical)
+- Step-by-step with screenshots
+- **Registration checklist** (critical)
+- Common mistakes section
 
-- Update script uses hardcoded path
-- No multi-install detection
+### 3. Testing Guide (addresses #4)
+- **Two-tier testing strategy** (critical)
+- Contract test usage
+- Test isolation pattern
+- Coverage expectations
 
-**Consequences:**
+### 4. Reference Documentation (addresses #6, #7, #8)
+- Configuration format table
+- Path resolution requirements
+- Error handling convention
+- Method implementation status
 
-- Version skew between platforms
-- Features work on one, broken on other
-
-**Prevention:**
-
-```javascript
-function detectInstallations() {
-  const locations = [
-    path.join(os.homedir(), '.claude'),
-    path.join(os.homedir(), '.config/opencode'),
-  ];
-  return locations.filter(loc =>
-    fs.existsSync(path.join(loc, 'get-shit-done'))
-  );
-}
-
-async function updateAllInstallations() {
-  const installs = detectInstallations();
-  console.log(`Found ${installs.length} installations`);
-  for (const install of installs) {
-    await updateInstallation(install);
-  }
-}
-```
-
-**Phase mapping:** Phase 5 (Update Mechanism)
-
----
-
-## Phase-Specific Warnings
-
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Platform Abstraction Layer | Hardcoded paths breaking existing .planning/ references | Use symlinks + runtime path resolution |
-| Installer | Config format divergence (settings.json vs opencode.jsonc) | Platform-specific config writers with schema validation |
-| Agent Spawning | Silent failures when Task tool doesn't exist on OpenCode | Adapter pattern + verification after spawn + timeouts |
-| Hook System | StatusLine/SessionStart missing on OpenCode | Feature detection + graceful degradation + best-effort equivalents |
-| Testing | Version drift between platform implementations | Shared test suite + platform matrix CI + feature flags |
-| Command Migration | 24 commands using hardcoded agent paths | Template variables + runtime resolution |
-| .planning/ Portability | Platform-specific data in state files | Store only platform-agnostic data in .planning/ |
-| Update Mechanism | Updating one platform but not others | Detect all installations + update all |
+### 5. Contributing Guide (addresses #9, #10)
+- PR scope definition
+- Review checklist
+- What's required vs optional
 
 ---
 
 ## Confidence Assessment
 
-| Area | Confidence | Source |
-|------|------------|--------|
-| Installation pitfalls | HIGH | GSD codebase analysis (install.js, changelog) + training data |
-| Agent spawning issues | HIGH | GSD command analysis (new-project.md Task calls) + platform comparison in PROJECT.md |
-| Hook system incompatibility | MEDIUM | GSD hooks/ directory + PROJECT.md platform comparison (20+ OpenCode events) |
-| Configuration divergence | HIGH | GSD installer settings.json manipulation + OpenCode docs mention of opencode.jsonc |
-| Version drift patterns | HIGH | Standard multi-platform development patterns from training |
-| Path handling issues | HIGH | GSD changelog (WSL2 fix in 1.6.4) + installer path expansion logic |
+| Area | Level | Reason |
+|------|-------|--------|
+| Behavioral contract pitfall | HIGH | Direct observation: adapter.ts has 50+ lines of contract comments not in docs |
+| Missing example pitfall | HIGH | Two existing adapters, no template or tutorial |
+| Registration pitfall | HIGH | Registration spans 4 files, not documented |
+| Testing pitfall | HIGH | Contract tests exist but not mentioned anywhere |
+| Capability pitfall | MEDIUM | Impact inferred from code, not tested |
+| Config format pitfall | HIGH | OpenCode JSONC requirement visible in code |
+| Path resolution pitfall | HIGH | Both adapters implement env var override |
+| Error handling pitfall | MEDIUM | Inferred from inconsistencies in adapters |
+| Stub pattern pitfall | HIGH | Phase 2/3 stubs visible in both adapters |
+| Scope pitfall | MEDIUM | General open-source contribution pattern |
 
----
-
-## Research Limitations
-
-**What I couldn't verify:**
-
-1. OpenCode's exact API for agent spawning (need actual OpenCode documentation)
-2. OpenCode's plugin event system details (PROJECT.md mentions "20+ events" but doesn't enumerate)
-3. Whether OpenCode supports MCP tools (affects research agent functionality)
-4. OpenCode command registration mechanism (flat vs directory structure confirmed but not registration API)
-
-**Recommended phase-specific research:**
-
-- **Phase 1-2:** Deep dive into OpenCode agent spawning API (test if YAML `subtask: true` actually works)
-- **Phase 3:** Map OpenCode plugin events to Claude Code hooks (which events exist, what data available)
-- **Phase 4:** Test full 24-command workflow on OpenCode (find platform-specific bugs early)
-
-**Low confidence claims flagged for validation:**
-
-- OpenCode plugin event system has 20+ events (from PROJECT.md, not verified)
-- OpenCode uses YAML `agent: name` + `subtask: true` syntax (from PROJECT.md comparison table, not verified with official docs)
-- OpenCode config file is opencode.jsonc (inferred from pattern, not confirmed)
+**Overall confidence: HIGH** - Pitfalls derived from direct GSD codebase analysis and established SDK/plugin documentation patterns.
 
 ---
 
 ## Sources
 
 **GSD Codebase Analysis:**
-- `/Users/juliano.farias/code/github/get-shit-done/bin/install.js` (installation logic, path handling, settings.json manipulation)
-- `/Users/juliano.farias/code/github/get-shit-done/hooks/statusline.js` (Claude Code hook implementation)
-- `/Users/juliano.farias/code/github/get-shit-done/commands/gsd/new-project.md` (agent spawning via Task tool)
-- `/Users/juliano.farias/code/github/get-shit-done/CHANGELOG.md` (historical issues: WSL2, orphaned files, path bugs)
-- `/Users/juliano.farias/code/github/get-shit-done/.planning/PROJECT.md` (platform comparison table, integration points)
+- `src/platform/adapter.ts` - Interface with behavioral contracts in comments
+- `src/platform/adapters/claude-code.ts` - Example implementation patterns
+- `src/platform/adapters/opencode.ts` - Graceful degradation patterns
+- `tests/contract/adapter.contract.ts` - Shared contract test pattern
+- `tests/contract/*.contract.test.ts` - Two-tier test structure
+- `src/platform/registry.ts` - Registration pattern
+- `src/platform/detection.ts` - Detection logic
+- `src/platform/paths.ts` - Path resolution patterns
 
-**Pattern Recognition (Training Data):**
-- Multi-platform CLI tool development patterns (path handling, config management)
-- Extension system architecture (VSCode, Sublime Text, IDE plugins)
-- Backward compatibility strategies (migration paths, symlink usage)
-- Cross-platform Node.js development (path.join, os.homedir, TTY detection)
+**Documentation Pattern Sources:**
+- Microsoft VSCode Extension Samples: README guidelines, test requirements
+- NGINX Documentation: Prerequisites placement, getting started best practices
+- Strapi Plugin SDK: Local plugin configuration pitfalls
+- Claude Code documentation-patterns.md: Documentation principles
+- Caido Developer Docs: Code example requirements
