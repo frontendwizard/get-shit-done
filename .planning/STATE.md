@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-22)
 
 **Core value:** Platform-agnostic workflow orchestration for AI-assisted development
-**Current focus:** No active milestone — use `/gsd:new-milestone` to start next
+**Current focus:** v2.2 Platform Installer Refactor
 
 ## Current Position
 
-Phase: None (between milestones)
-Plan: None
-Status: v2.1 Platform Documentation shipped 2026-01-22
-Last activity: 2026-01-22 — Completed and archived milestone v2.1
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v2.2
+Last activity: 2026-01-22 — Milestone v2.2 started
 
-Progress: [██████████] 100% (v2.1 shipped)
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 

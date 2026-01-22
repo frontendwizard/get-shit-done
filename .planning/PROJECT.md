@@ -8,9 +8,15 @@ A platform-agnostic workflow orchestration system for AI-assisted software devel
 
 Platform independence - users choose AI platforms based on project needs, not tooling limitations. GSD workflow remains consistent regardless of which platform executes it.
 
-## Current Milestone: (None Active)
+## Current Milestone: v2.2 Platform Installer Refactor
 
-Previous milestone v2.1 Platform Documentation shipped 2026-01-22. Use `/gsd:new-milestone` to start the next milestone.
+**Goal:** Extract platform-specific install logic from bin/install.js into adapters so adding a new platform requires only 4 files instead of 9+.
+
+**Target features:**
+- PlatformInstaller interface with install/transform/cleanup methods
+- BasePlatformAdapter abstract class eliminating duplication
+- bin/install.js delegates to adapters (no hardcoded platform conditionals)
+- Consolidated expandTilde() utility
 
 ## Current State (v2.0)
 
