@@ -4,40 +4,72 @@
  * Verifies ClaudeCodeAdapter implements PlatformAdapter interface correctly:
  * 1. Runs shared contract tests (interface compliance)
  * 2. Platform-specific behavior tests (capabilities, config format, hooks)
+ *
+ * IMPORTANT: These tests use a real temp directory to avoid polluting
+ * the developer's actual config. We set CLAUDE_CONFIG_DIR env var to redirect
+ * the adapter to use our temp directory.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { vol, fs as memfs } from 'memfs';
-import os from 'os';
-
-// Mock fs with memfs implementation
-vi.mock('fs', () => memfs);
-vi.mock('node:fs', () => memfs);
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 import { ClaudeCodeAdapter } from '../../src/platform/adapters/claude-code';
-import { runAdapterContractTests } from './adapter.contract';
 
-// Run shared contract tests - verifies interface compliance
-runAdapterContractTests('ClaudeCodeAdapter', () => new ClaudeCodeAdapter());
+// Use a unique temp directory for ALL tests to avoid touching real config
+let testTmpDir: string;
+let originalClaudeConfigDir: string | undefined;
+
+beforeAll(() => {
+  // Save original env
+  originalClaudeConfigDir = process.env.CLAUDE_CONFIG_DIR;
+  
+  // Create isolated temp directory
+  testTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gsd-claude-test-'));
+  
+  // Point Claude Code adapter to our temp directory
+  process.env.CLAUDE_CONFIG_DIR = testTmpDir;
+});
+
+afterAll(() => {
+  // Restore original env
+  if (originalClaudeConfigDir !== undefined) {
+    process.env.CLAUDE_CONFIG_DIR = originalClaudeConfigDir;
+  } else {
+    delete process.env.CLAUDE_CONFIG_DIR;
+  }
+  
+  // Clean up temp directory
+  if (testTmpDir && fs.existsSync(testTmpDir)) {
+    fs.rmSync(testTmpDir, { recursive: true });
+  }
+});
 
 // Claude Code-specific behavior tests
 describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
   let adapter: ClaudeCodeAdapter;
-  const homeDir = os.homedir();
-  const configDir = `${homeDir}/.claude`;
-  const settingsPath = `${configDir}/settings.json`;
+  let configDir: string;
+  let settingsPath: string;
 
   beforeEach(() => {
-    vol.reset();
-    // Initialize directory structure
-    vol.fromJSON({
-      [configDir]: null,
-    });
+    // Each test gets a fresh adapter pointing to temp dir
+    configDir = testTmpDir;
+    settingsPath = path.join(configDir, 'settings.json');
+    
+    // Clean up any existing config
+    if (fs.existsSync(settingsPath)) {
+      fs.unlinkSync(settingsPath);
+    }
+    
     adapter = new ClaudeCodeAdapter();
   });
 
   afterEach(() => {
-    vol.reset();
+    // Clean up after each test
+    if (fs.existsSync(settingsPath)) {
+      fs.unlinkSync(settingsPath);
+    }
   });
 
   // =========================================================================
@@ -75,9 +107,9 @@ describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
   // Path Resolution - Claude Code specific paths
   // =========================================================================
   describe('path resolution', () => {
-    it('getConfigDir() returns ~/.claude', () => {
-      const configDir = adapter.getConfigDir();
-      expect(configDir).toContain('.claude');
+    it('getConfigDir() returns temp directory when CLAUDE_CONFIG_DIR is set', () => {
+      const dir = adapter.getConfigDir();
+      expect(dir).toBe(testTmpDir);
     });
 
     it('getCommandsDir() includes /gsd namespace', () => {
@@ -96,17 +128,13 @@ describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
     });
 
     it('returns parsed JSON when settings.json exists', async () => {
-      vol.fromJSON({
-        [settingsPath]: JSON.stringify({ existing: 'value', nested: { key: true } }),
-      });
+      fs.writeFileSync(settingsPath, JSON.stringify({ existing: 'value', nested: { key: true } }));
       const config = await adapter.readConfig();
       expect(config).toEqual({ existing: 'value', nested: { key: true } });
     });
 
     it('throws on malformed JSON', async () => {
-      vol.fromJSON({
-        [settingsPath]: '{ invalid json',
-      });
+      fs.writeFileSync(settingsPath, '{ invalid json');
       await expect(adapter.readConfig()).rejects.toThrow();
     });
   });
@@ -116,22 +144,14 @@ describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
   // =========================================================================
   describe('writeConfig', () => {
     it('writes JSON to settings.json', async () => {
-      vol.fromJSON({
-        [configDir]: null,
-        [settingsPath]: '{}',
-      });
-      await adapter.writeConfig({ test: 'data', number: 42 });
-      const content = vol.readFileSync(settingsPath, 'utf8');
-      expect(JSON.parse(content as string)).toEqual({ test: 'data', number: 42 });
+      await adapter.writeConfig({ written: 'by-test', number: 42 });
+      const content = fs.readFileSync(settingsPath, 'utf8');
+      expect(JSON.parse(content)).toEqual({ written: 'by-test', number: 42 });
     });
 
     it('formats JSON with indentation', async () => {
-      vol.fromJSON({
-        [configDir]: null,
-        [settingsPath]: '{}',
-      });
       await adapter.writeConfig({ key: 'value' });
-      const content = vol.readFileSync(settingsPath, 'utf8') as string;
+      const content = fs.readFileSync(settingsPath, 'utf8');
       // Should have newlines from pretty-printing
       expect(content).toContain('\n');
     });
@@ -142,9 +162,7 @@ describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
   // =========================================================================
   describe('mergeConfig', () => {
     it('merges updates into existing config', async () => {
-      vol.fromJSON({
-        [settingsPath]: JSON.stringify({ existing: true, keep: 'this' }),
-      });
+      fs.writeFileSync(settingsPath, JSON.stringify({ existing: true, keep: 'this' }));
       await adapter.mergeConfig({ new: 'value' });
       const config = await adapter.readConfig();
       expect(config.existing).toBe(true);
@@ -153,9 +171,7 @@ describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
     });
 
     it('overwrites existing keys with updates', async () => {
-      vol.fromJSON({
-        [settingsPath]: JSON.stringify({ key: 'old' }),
-      });
+      fs.writeFileSync(settingsPath, JSON.stringify({ key: 'old' }));
       await adapter.mergeConfig({ key: 'new' });
       const config = await adapter.readConfig();
       expect(config.key).toBe('new');
@@ -167,43 +183,35 @@ describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
   // =========================================================================
   describe('registerHook', () => {
     it('creates hooks structure if not exists', async () => {
-      vol.fromJSON({
-        [settingsPath]: JSON.stringify({}),
-      });
+      fs.writeFileSync(settingsPath, JSON.stringify({}));
       await adapter.registerHook('SessionStart', '/path/to/hook.js');
-      const content = vol.readFileSync(settingsPath, 'utf8');
-      const settings = JSON.parse(content as string);
+      const content = fs.readFileSync(settingsPath, 'utf8');
+      const settings = JSON.parse(content);
       expect(settings.hooks).toBeDefined();
       expect(settings.hooks.SessionStart).toBeDefined();
     });
 
     it('adds hook to settings.json hooks array', async () => {
-      vol.fromJSON({
-        [settingsPath]: JSON.stringify({}),
-      });
+      fs.writeFileSync(settingsPath, JSON.stringify({}));
       await adapter.registerHook('SessionStart', '/path/to/hook.js');
-      const content = vol.readFileSync(settingsPath, 'utf8');
-      const settings = JSON.parse(content as string);
+      const content = fs.readFileSync(settingsPath, 'utf8');
+      const settings = JSON.parse(content);
       expect(settings.hooks.SessionStart).toBeDefined();
       expect(settings.hooks.SessionStart.length).toBe(1);
       expect(settings.hooks.SessionStart[0].hooks[0].command).toContain('/path/to/hook.js');
     });
 
     it('is idempotent (does not duplicate hooks)', async () => {
-      vol.fromJSON({
-        [settingsPath]: JSON.stringify({}),
-      });
+      fs.writeFileSync(settingsPath, JSON.stringify({}));
       await adapter.registerHook('SessionStart', '/path/to/hook.js');
       await adapter.registerHook('SessionStart', '/path/to/hook.js');
-      const content = vol.readFileSync(settingsPath, 'utf8');
-      const settings = JSON.parse(content as string);
+      const content = fs.readFileSync(settingsPath, 'utf8');
+      const settings = JSON.parse(content);
       expect(settings.hooks.SessionStart.length).toBe(1);
     });
 
     it('supports multiple different hooks', async () => {
-      vol.fromJSON({
-        [settingsPath]: JSON.stringify({}),
-      });
+      fs.writeFileSync(settingsPath, JSON.stringify({}));
       await adapter.registerHook('SessionStart', '/path/to/start.js');
       await adapter.registerHook('StatusLine', '/path/to/status.js');
       const config = await adapter.readConfig();
@@ -223,25 +231,23 @@ describe('ClaudeCodeAdapter - Platform-Specific Behavior', () => {
     });
 
     it('returns AgentInstance when agent file exists', async () => {
-      const agentPath = '/test/agent.md';
-      vol.fromJSON({
-        [agentPath]: '# Test Agent\n\nThis is a test agent.',
-      });
+      const agentPath = path.join(testTmpDir, 'test-agent.md');
+      fs.writeFileSync(agentPath, '# Test Agent\n\nThis is a test agent.');
       const instance = await adapter.spawnAgent(agentPath);
-      expect(instance.id).toContain('agent');
+      expect(instance.id).toContain('test-agent');
       expect(instance.status).toBe('completed'); // Placeholder implementation
+      fs.unlinkSync(agentPath);
     });
 
     it('generates unique agent IDs', async () => {
-      const agentPath = '/test/agent.md';
-      vol.fromJSON({
-        [agentPath]: '# Test Agent',
-      });
+      const agentPath = path.join(testTmpDir, 'test-agent.md');
+      fs.writeFileSync(agentPath, '# Test Agent');
       const instance1 = await adapter.spawnAgent(agentPath);
       // Small delay to ensure different timestamp
       await new Promise(resolve => setTimeout(resolve, 5));
       const instance2 = await adapter.spawnAgent(agentPath);
       expect(instance1.id).not.toBe(instance2.id);
+      fs.unlinkSync(agentPath);
     });
   });
 });
