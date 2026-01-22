@@ -30,7 +30,7 @@ See .planning/MILESTONES.md for details.
 - Decimal phases (7.1, 7.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 7: Architecture Documentation** - Explain system design and patterns
-- [ ] **Phase 8: Adapter Creation Guide** - Step-by-step tutorial with checklists
+- [x] **Phase 8: Adapter Creation Guide** - Step-by-step tutorial with checklists
 
 ## Phase Details
 
@@ -61,7 +61,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 08-01-PLAN.md — Create adapter creation tutorial with checklists and integration links
+- [x] 08-01-PLAN.md — Create adapter creation tutorial with checklists and integration links
 
 ## Progress
 
@@ -72,7 +72,7 @@ Phases execute in numeric order: 7 → 7.1 (if inserted) → 8
 |-------|-----------|----------------|--------|-----------|
 | 1-6 | v2.0 | 32/32 | Complete | 2026-01-22 |
 | 7. Architecture Documentation | v2.1 | 1/1 | Complete | 2026-01-22 |
-| 8. Adapter Creation Guide | v2.1 | 0/1 | Planned | - |
+| 8. Adapter Creation Guide | v2.1 | 1/1 | Complete | 2026-01-22 |
 
 ---
 *Roadmap created: 2026-01-22*

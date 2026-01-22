@@ -15,14 +15,14 @@ Requirements for v2.1 milestone. Each maps to roadmap phases.
 
 ### Tutorial/Guide
 
-- [ ] **GUIDE-01**: Step-by-step adapter creation guide ("Your First Adapter" walkthrough)
-- [ ] **GUIDE-02**: Registration checklist documenting 4-file changes required to add a platform
-- [ ] **GUIDE-03**: Testing guide explaining how to run and write tests for new adapters
-- [ ] **GUIDE-04**: Pre-PR checklist for contributors to self-verify before submitting
+- [x] **GUIDE-01**: Step-by-step adapter creation guide ("Your First Adapter" walkthrough)
+- [x] **GUIDE-02**: Registration checklist documenting 4-file changes required to add a platform
+- [x] **GUIDE-03**: Testing guide explaining how to run and write tests for new adapters
+- [x] **GUIDE-04**: Pre-PR checklist for contributors to self-verify before submitting
 
 ### Integration
 
-- [ ] **INTEG-01**: Integration with existing docs (links from main docs and PLATFORM-SUPPORT.md)
+- [x] **INTEG-01**: Integration with existing docs (links from main docs and PLATFORM-SUPPORT.md)
 
 ## v2 Requirements
 
@@ -57,14 +57,14 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ARCH-01 | Phase 7: Architecture Documentation | Pending |
-| ARCH-02 | Phase 7: Architecture Documentation | Pending |
-| ARCH-03 | Phase 7: Architecture Documentation | Pending |
-| GUIDE-01 | Phase 8: Adapter Creation Guide | Pending |
-| GUIDE-02 | Phase 8: Adapter Creation Guide | Pending |
-| GUIDE-03 | Phase 8: Adapter Creation Guide | Pending |
-| GUIDE-04 | Phase 8: Adapter Creation Guide | Pending |
-| INTEG-01 | Phase 8: Adapter Creation Guide | Pending |
+| ARCH-01 | Phase 7: Architecture Documentation | Complete |
+| ARCH-02 | Phase 7: Architecture Documentation | Complete |
+| ARCH-03 | Phase 7: Architecture Documentation | Complete |
+| GUIDE-01 | Phase 8: Adapter Creation Guide | Complete |
+| GUIDE-02 | Phase 8: Adapter Creation Guide | Complete |
+| GUIDE-03 | Phase 8: Adapter Creation Guide | Complete |
+| GUIDE-04 | Phase 8: Adapter Creation Guide | Complete |
+| INTEG-01 | Phase 8: Adapter Creation Guide | Complete |
 
 **Coverage:**
 - v1 requirements: 8 total
