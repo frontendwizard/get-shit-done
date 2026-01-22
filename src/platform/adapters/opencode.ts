@@ -53,24 +53,32 @@ export class OpenCodeAdapter implements PlatformAdapter {
   // =========================================================================
 
   /**
-   * Read OpenCode config (opencode.json or opencode.jsonc)
+   * Read OpenCode config (opencode.json, opencode.jsonc, or config.json)
    *
    * Uses jsonc-parser to handle JSON with comments.
    * Returns empty object if file doesn't exist.
+   * 
+   * Checks in order: opencode.json, opencode.jsonc, config.json
    */
   async readConfig(): Promise<Record<string, any>> {
     const configDir = this.getConfigDir();
 
-    // Try both .json and .jsonc extensions
-    const jsonPath = path.join(configDir, 'opencode.json');
-    const jsoncPath = path.join(configDir, 'opencode.jsonc');
+    // Try multiple config file names (opencode.json preferred, config.json for backwards compat)
+    const candidates = [
+      path.join(configDir, 'opencode.json'),
+      path.join(configDir, 'opencode.jsonc'),
+      path.join(configDir, 'config.json'),
+    ];
 
-    let configPath = jsonPath;
-    if (!fs.existsSync(jsonPath) && fs.existsSync(jsoncPath)) {
-      configPath = jsoncPath;
+    let configPath: string | null = null;
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        configPath = candidate;
+        break;
+      }
     }
 
-    if (!fs.existsSync(configPath)) {
+    if (!configPath) {
       return {};
     }
 
