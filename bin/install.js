@@ -299,6 +299,46 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix) {
 }
 
 /**
+ * Copy commands for OpenCode platform
+ * 
+ * Flattens nested command directory and renames files:
+ * - commands/gsd/help.md -> command/gsd-help.md
+ * - commands/gsd/plan-phase.md -> command/gsd-plan-phase.md
+ * 
+ * Also transforms frontmatter to remove Claude Code-specific fields.
+ * Clears existing gsd-*.md files before copying to remove orphans.
+ */
+function copyCommandsForOpenCode(srcDir, destDir, pathPrefix) {
+  // Remove old GSD commands (gsd-*.md) before copying new ones
+  if (fs.existsSync(destDir)) {
+    for (const file of fs.readdirSync(destDir)) {
+      if (file.startsWith('gsd-') && file.endsWith('.md')) {
+        fs.unlinkSync(path.join(destDir, file));
+      }
+    }
+  }
+
+  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith('.md')) {
+      // Rename: help.md -> gsd-help.md
+      const newName = `gsd-${entry.name}`;
+      const srcPath = path.join(srcDir, entry.name);
+      const destPath = path.join(destDir, newName);
+
+      let content = fs.readFileSync(srcPath, 'utf8');
+      // Replace path references
+      content = content.replace(/~\/\.claude\//g, pathPrefix);
+      // Transform frontmatter for OpenCode
+      content = transformCommandForOpenCode(content);
+
+      fs.writeFileSync(destPath, content);
+    }
+  }
+}
+
+/**
  * Clean up orphaned files from previous GSD versions
  * Platform-specific cleanup
  */
@@ -308,13 +348,23 @@ function cleanupOrphanedFiles(claudeDir, platform) {
         'hooks/gsd-notify.sh',  // Removed in v1.6.x
         'hooks/statusline.js',  // Renamed to gsd-statusline.js in v1.9.0
       ]
-    : [];  // No OpenCode orphans yet
+    : [];  // OpenCode orphan files handled below
 
   for (const relPath of orphanedFiles) {
     const fullPath = path.join(claudeDir, relPath);
     if (fs.existsSync(fullPath)) {
       fs.unlinkSync(fullPath);
       console.log(`  ${green}✓${reset} Removed orphaned ${relPath}`);
+    }
+  }
+
+  // OpenCode-specific: remove old nested command/gsd/ directory
+  // (commands now live at command/gsd-*.md root level)
+  if (platform === 'opencode') {
+    const oldGsdDir = path.join(claudeDir, 'command', 'gsd');
+    if (fs.existsSync(oldGsdDir)) {
+      fs.rmSync(oldGsdDir, { recursive: true });
+      console.log(`  ${green}✓${reset} Removed orphaned command/gsd/ directory`);
     }
   }
 }
@@ -453,6 +503,63 @@ mode: subagent`;
 }
 
 /**
+ * Transform Claude Code command frontmatter to OpenCode format
+ * 
+ * Claude Code format:
+ *   ---
+ *   name: gsd:help
+ *   description: Show available GSD commands
+ *   argument-hint: <phase>
+ *   allowed-tools:
+ *     - Read
+ *     - Write
+ *   ---
+ * 
+ * OpenCode format (only keeps valid fields):
+ *   ---
+ *   description: Show available GSD commands
+ *   ---
+ * 
+ * OpenCode derives command name from filepath, doesn't use argument-hint or allowed-tools
+ */
+function transformCommandForOpenCode(content) {
+  // Match the frontmatter block
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!frontmatterMatch) {
+    return content; // No frontmatter, return as-is
+  }
+
+  const frontmatter = frontmatterMatch[1];
+  const body = content.slice(frontmatterMatch[0].length);
+
+  // Parse only the fields OpenCode recognizes
+  const descMatch = frontmatter.match(/^description:\s*(.+)$/m);
+  const agentMatch = frontmatter.match(/^agent:\s*(.+)$/m);
+  const modelMatch = frontmatter.match(/^model:\s*(.+)$/m);
+  const subtaskMatch = frontmatter.match(/^subtask:\s*(.+)$/m);
+
+  // Build new frontmatter with only valid OpenCode fields
+  let newFrontmatter = '---';
+  
+  if (descMatch) {
+    newFrontmatter += `\ndescription: ${descMatch[1].trim()}`;
+  }
+  if (agentMatch) {
+    newFrontmatter += `\nagent: ${agentMatch[1].trim()}`;
+  }
+  if (modelMatch) {
+    newFrontmatter += `\nmodel: ${modelMatch[1].trim()}`;
+  }
+  if (subtaskMatch) {
+    newFrontmatter += `\nsubtask: ${subtaskMatch[1].trim()}`;
+  }
+
+  newFrontmatter += '\n---';
+
+  return newFrontmatter + body;
+}
+
+/**
  * Verify a directory exists and contains files
  */
 function verifyInstalled(dirPath, description) {
@@ -512,14 +619,24 @@ async function install(isGlobal, platform = 'claude-code') {
   // Clean up orphaned files from previous versions
   cleanupOrphanedFiles(claudeDir, platform);
 
-  // Create commands directory and copy commands/gsd with path replacement
+  // Create commands directory and copy commands
   fs.mkdirSync(commandsDir, { recursive: true });
   const gsdSrc = path.join(src, 'commands', 'gsd');
-  copyWithPathReplacement(gsdSrc, commandsDir, pathPrefix);
-  if (verifyInstalled(commandsDir, 'commands/gsd')) {
-    console.log(`  ${green}✓${reset} Installed commands/gsd`);
+  
+  if (platform === 'opencode') {
+    // OpenCode: flatten commands to root level with gsd- prefix
+    // e.g., commands/gsd/help.md -> command/gsd-help.md
+    // This avoids nested directory issues and makes commands like /gsd-help
+    copyCommandsForOpenCode(gsdSrc, commandsDir, pathPrefix);
   } else {
-    failures.push('commands/gsd');
+    // Claude Code: keep nested structure (commands/gsd/)
+    copyWithPathReplacement(gsdSrc, commandsDir, pathPrefix);
+  }
+  
+  if (verifyInstalled(commandsDir, 'commands')) {
+    console.log(`  ${green}✓${reset} Installed commands`);
+  } else {
+    failures.push('commands');
   }
 
   // Copy get-shit-done skill with path replacement
@@ -620,45 +737,49 @@ async function install(isGlobal, platform = 'claude-code') {
     process.exit(1);
   }
 
-  // Configure statusline and hooks in settings.json (Claude Code) or opencode.json (OpenCode)
-  const configFileName = platform === 'opencode' ? 'opencode.json' : 'settings.json';
-  const settingsPath = path.join(claudeDir, configFileName);
+  // Configure statusline and hooks in settings.json (Claude Code only)
+  // OpenCode config is not modified by GSD - we only install commands/agents
+  if (platform === 'claude-code') {
+    const configFileName = 'settings.json';
+    const settingsPath = path.join(claudeDir, configFileName);
 
-  // Backup existing settings before any modifications (INST-05)
-  const backupPath = backupConfigFile(settingsPath, platform);
-  if (backupPath) {
-    console.log(`  ${green}✓${reset} Backed up ${configFileName}`);
-  }
-
-  const settings = cleanupOrphanedHooks(readSettings(settingsPath));
-  const statuslineCommand = isGlobal
-    ? buildHookCommand(claudeDir, 'gsd-statusline.js')
-    : 'node .claude/hooks/gsd-statusline.js';
-  const updateCheckCommand = isGlobal
-    ? buildHookCommand(claudeDir, 'gsd-check-update.js')
-    : 'node .claude/hooks/gsd-check-update.js';
-
-  // Register hooks using adapter capability check (platform-agnostic)
-  // Also check if user has disabled hooks via config
-  if (adapter.supportsHooks() && areHooksEnabled(settings)) {
-    const hasGsdUpdateHook = settings.hooks?.SessionStart?.some(entry =>
-      entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'))
-    );
-
-    if (!hasGsdUpdateHook) {
-      await adapter.registerHook('SessionStart', updateCheckCommand);
-      console.log(`  ${green}✓${reset} Configured update check hook`);
+    // Backup existing settings before any modifications (INST-05)
+    const backupPath = backupConfigFile(settingsPath, platform);
+    if (backupPath) {
+      console.log(`  ${green}✓${reset} Backed up ${configFileName}`);
     }
-  } else if (adapter.supportsHooks() && !areHooksEnabled(settings)) {
-    console.log(`  ${dim}Hooks disabled via config (gsd.hooks.enabled: false)${reset}`);
+
+    const settings = cleanupOrphanedHooks(readSettings(settingsPath));
+    const statuslineCommand = isGlobal
+      ? buildHookCommand(claudeDir, 'gsd-statusline.js')
+      : 'node .claude/hooks/gsd-statusline.js';
+    const updateCheckCommand = isGlobal
+      ? buildHookCommand(claudeDir, 'gsd-check-update.js')
+      : 'node .claude/hooks/gsd-check-update.js';
+
+    // Register hooks using adapter capability check (platform-agnostic)
+    // Also check if user has disabled hooks via config
+    if (adapter.supportsHooks() && areHooksEnabled(settings)) {
+      const hasGsdUpdateHook = settings.hooks?.SessionStart?.some(entry =>
+        entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gsd-check-update'))
+      );
+
+      if (!hasGsdUpdateHook) {
+        await adapter.registerHook('SessionStart', updateCheckCommand);
+        console.log(`  ${green}✓${reset} Configured update check hook`);
+      }
+    } else if (adapter.supportsHooks() && !areHooksEnabled(settings)) {
+      console.log(`  ${dim}Hooks disabled via config (gsd.hooks.enabled: false)${reset}`);
+    }
+
+    // Re-read settings.json after adapter modifications to avoid data race
+    const freshSettings = readSettings(settingsPath);
+
+    return { settingsPath, settings: freshSettings, statuslineCommand };
   }
-  // No else clause for !supportsHooks() - silent skip per graceful degradation
 
-  // Re-read settings.json after adapter modifications to avoid data race
-  // (adapter.registerHook() writes to disk, we need the updated state)
-  const freshSettings = readSettings(settingsPath);
-
-  return { settingsPath, settings: freshSettings, statuslineCommand };
+  // OpenCode: no config modifications needed
+  return { settingsPath: null, settings: {}, statuslineCommand: null };
 }
 
 /**
@@ -676,11 +797,14 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
     console.log(`  ${dim}Statusline disabled via config (gsd.hooks.enabled: false)${reset}`);
   }
 
-  // Always write settings (hooks were already configured in install())
-  writeSettings(settingsPath, settings);
+  // Only write settings for Claude Code (which uses hooks/statusline)
+  // OpenCode config should not be touched - GSD doesn't add anything to it
+  if (platform === 'claude-code') {
+    writeSettings(settingsPath, settings);
+  }
 
   const platformName = platform === 'opencode' ? 'OpenCode' : 'Claude Code';
-  const helpCommand = platform === 'opencode' ? '/gsd:help' : '/gsd:help';
+  const helpCommand = platform === 'opencode' ? '/gsd-help' : '/gsd:help';
   console.log(`
   ${green}Done!${reset} Launch ${platformName} and run ${cyan}${helpCommand}${reset}.
 `);

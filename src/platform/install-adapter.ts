@@ -57,12 +57,14 @@ export function getInstallPaths(
     const configDir = path.join(cwd, localDirName);
 
     // Commands directory uses platform-specific structure
-    // Claude Code: commands/gsd, OpenCode: command/gsd (singular)
-    const commandsSubdir = platform === 'opencode' ? 'command' : 'commands';
+    // Claude Code: commands/gsd (nested), OpenCode: command (flat with gsd- prefix files)
+    const commandsDir = platform === 'opencode'
+      ? path.join(configDir, 'command')
+      : path.join(configDir, 'commands', 'gsd');
 
     return {
       configDir,
-      commandsDir: path.join(configDir, commandsSubdir, 'gsd'),
+      commandsDir,
       agentsDir: path.join(configDir, 'agents'),
       hooksDir: path.join(configDir, 'hooks'),
       pathPrefix: `./${localDirName}/`,
@@ -87,8 +89,8 @@ export function getInstallPaths(
 
   // Get other directories from resolver
   // Note: Commands directory structure differs by platform:
-  //   - Claude Code: {configDir}/commands/gsd
-  //   - OpenCode: {configDir}/command/gsd (singular)
+  //   - Claude Code: {configDir}/commands/gsd (nested)
+  //   - OpenCode: {configDir}/command (flat, files named gsd-*.md)
   let commandsDir: string;
   let agentsDir: string;
   let hooksDir: string;
@@ -98,6 +100,11 @@ export function getInstallPaths(
     commandsDir = path.join(configDir, 'commands', 'gsd');
     agentsDir = path.join(configDir, 'agents');
     hooksDir = path.join(configDir, 'hooks');
+  } else if (platform === 'opencode') {
+    // OpenCode: flat command directory (files named gsd-*.md)
+    commandsDir = path.join(configDir, 'command');
+    agentsDir = resolver.getAgentsDir();
+    hooksDir = resolver.getHooksDir();
   } else {
     // Use platform-specific paths from resolver
     commandsDir = resolver.getCommandsDir();

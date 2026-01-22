@@ -49,15 +49,17 @@ describe('getInstallPaths', () => {
       const paths = getInstallPaths(true, null, 'opencode');
 
       expect(paths.configDir).toBe(path.join(homeDir, '.config', 'opencode'));
-      expect(paths.commandsDir).toBe(path.join(homeDir, '.config', 'opencode', 'command', 'gsd'));
+      expect(paths.commandsDir).toBe(path.join(homeDir, '.config', 'opencode', 'command'));
       expect(paths.agentsDir).toBe(path.join(homeDir, '.config', 'opencode', 'agents'));
       expect(paths.hooksDir).toBe(path.join(homeDir, '.config', 'opencode', 'hooks'));
     });
 
-    it('uses command (singular) not commands (plural)', () => {
+    it('uses flat command directory (no /gsd subdirectory)', () => {
       const paths = getInstallPaths(true, null, 'opencode');
 
-      expect(paths.commandsDir).toContain('/command/');
+      // OpenCode uses flat structure: command/gsd-*.md files
+      expect(paths.commandsDir).toContain('/command');
+      expect(paths.commandsDir).not.toContain('/gsd');
       expect(paths.commandsDir).not.toContain('/commands/');
     });
 
@@ -87,7 +89,7 @@ describe('getInstallPaths', () => {
       const paths = getInstallPaths(false, null, 'opencode');
 
       expect(paths.configDir).toBe(path.join(cwd, '.opencode'));
-      expect(paths.commandsDir).toBe(path.join(cwd, '.opencode', 'command', 'gsd'));
+      expect(paths.commandsDir).toBe(path.join(cwd, '.opencode', 'command'));
       expect(paths.pathPrefix).toBe('./.opencode/');
     });
   });
