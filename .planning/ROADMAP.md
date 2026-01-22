@@ -29,7 +29,7 @@ See .planning/MILESTONES.md for details.
 - Integer phases (7, 8): Planned milestone work
 - Decimal phases (7.1, 7.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 7: Architecture Documentation** - Explain system design and patterns
+- [x] **Phase 7: Architecture Documentation** - Explain system design and patterns
 - [ ] **Phase 8: Adapter Creation Guide** - Step-by-step tutorial with checklists
 
 ## Phase Details
@@ -46,7 +46,7 @@ See .planning/MILESTONES.md for details.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 07-01-PLAN.md — Create platform architecture documentation with Mermaid diagrams
+- [x] 07-01-PLAN.md — Create platform architecture documentation with Mermaid diagrams
 
 ### Phase 8: Adapter Creation Guide
 **Goal**: Contributors can implement a new platform adapter end-to-end using the guide
@@ -71,7 +71,7 @@ Phases execute in numeric order: 7 → 7.1 (if inserted) → 8
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-6 | v2.0 | 32/32 | Complete | 2026-01-22 |
-| 7. Architecture Documentation | v2.1 | 0/1 | Not started | - |
+| 7. Architecture Documentation | v2.1 | 1/1 | Complete | 2026-01-22 |
 | 8. Adapter Creation Guide | v2.1 | 0/TBD | Not started | - |
 
 ---
